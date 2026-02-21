@@ -1,0 +1,370 @@
+import React, { forwardRef } from 'react';
+import { CardData, DesignConfig } from '../types';
+
+interface CardCanvasProps {
+  card: CardData;
+  design: DesignConfig;
+}
+
+/** 숫자 + 단위를 강조색으로 하이라이트 */
+function renderHighlightedText(
+  text: string,
+  accentColor: string,
+  style: React.CSSProperties
+): React.ReactNode {
+  const regex =
+    /(\d[\d,.]*\s*(?:만|억|조|원|명|개|건|호|배|위|년|월|일|시간|분|초|%|km|kg|g|ml|L|달러|조원|만원|만명|천명|천만)?)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(
+        <span key={`t-${lastIndex}`}>{text.slice(lastIndex, match.index)}</span>
+      );
+    }
+    parts.push(
+      <span
+        key={`h-${match.index}`}
+        style={{ color: accentColor, fontWeight: 800 }}
+      >
+        {match[0]}
+      </span>
+    );
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(<span key={`t-${lastIndex}`}>{text.slice(lastIndex)}</span>);
+  }
+
+  return <span style={style}>{parts}</span>;
+}
+
+const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
+  ({ card, design }, ref) => {
+    const BOTTOM_BAR_HEIGHT = 72;
+
+    return (
+      <div
+        ref={ref}
+        style={{
+          width: 1080,
+          height: 1350,
+          position: 'relative',
+          backgroundColor: design.backgroundColor,
+          color: design.textColor,
+          fontFamily: design.fontFamily,
+          overflow: 'hidden',
+        }}
+      >
+        {/* 배경 그라데이션 오버레이 */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(168deg, rgba(255,255,255,0.06) 0%, transparent 40%, rgba(0,0,0,0.08) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* 미세 도트 패턴 */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage:
+              'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* 컨텐츠 영역 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: BOTTOM_BAR_HEIGHT,
+            padding: '60px 72px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            boxSizing: 'border-box',
+          }}
+        >
+          {/* ====== 표지 카드 ====== */}
+          {card.type === 'title' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 28,
+                textAlign: design.textAlign,
+                alignItems:
+                  design.textAlign === 'center' ? 'center' : 'flex-start',
+              }}
+            >
+              {/* 카테고리 태그 */}
+              {card.tags && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 12,
+                    justifyContent:
+                      design.textAlign === 'center' ? 'center' : 'flex-start',
+                  }}
+                >
+                  {card.tags
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .map((tag, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 600,
+                          color: design.accentColor,
+                          letterSpacing: '0.5px',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                        }}
+                      >
+                        {tag.startsWith('#') ? tag : `#${tag}`}
+                      </span>
+                    ))}
+                </div>
+              )}
+
+              {/* 장식 라인 */}
+              <div
+                style={{
+                  width: 60,
+                  height: 4,
+                  backgroundColor: design.accentColor,
+                  borderRadius: 2,
+                  alignSelf:
+                    design.textAlign === 'center' ? 'center' : 'flex-start',
+                }}
+              />
+
+              {/* 제목 */}
+              <h1
+                style={{
+                  fontSize: 68,
+                  fontWeight: 900,
+                  lineHeight: 1.3,
+                  margin: 0,
+                  wordBreak: 'keep-all',
+                  whiteSpace: 'pre-wrap',
+                  textShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                {card.title || '제목을 입력하세요'}
+              </h1>
+
+              {/* 부제 */}
+              <p
+                style={{
+                  fontSize: 32,
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  margin: 0,
+                  opacity: 0.75,
+                  wordBreak: 'keep-all',
+                  whiteSpace: 'pre-wrap',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                {card.subtitle || '부제를 입력하세요'}
+              </p>
+            </div>
+          )}
+
+          {/* ====== 본문 카드 ====== */}
+          {card.type === 'body' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 28,
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              {/* 소제목 */}
+              {card.subtitle && (
+                <>
+                  <h2
+                    style={{
+                      fontSize: 48,
+                      fontWeight: 800,
+                      lineHeight: 1.35,
+                      margin: 0,
+                      color: design.accentColor,
+                      wordBreak: 'keep-all',
+                      whiteSpace: 'pre-wrap',
+                      textShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    {card.subtitle}
+                  </h2>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 3,
+                      backgroundColor: design.accentColor,
+                      borderRadius: 2,
+                      opacity: 0.6,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* 본문 텍스트 (숫자 하이라이트) */}
+              {renderHighlightedText(
+                card.body || '내용을 입력하세요',
+                design.accentColor,
+                {
+                  fontSize: 38,
+                  fontWeight: 400,
+                  lineHeight: 1.85,
+                  wordBreak: 'keep-all' as const,
+                  whiteSpace: 'pre-wrap' as const,
+                  textShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                  display: 'block',
+                }
+              )}
+            </div>
+          )}
+
+          {/* ====== 마지막 카드 ====== */}
+          {card.type === 'ending' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                gap: 36,
+                width: '100%',
+              }}
+            >
+              {/* 마무리 문구 */}
+              <p
+                style={{
+                  fontSize: 40,
+                  fontWeight: 700,
+                  lineHeight: 1.6,
+                  margin: 0,
+                  wordBreak: 'keep-all',
+                  whiteSpace: 'pre-wrap',
+                  textShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                }}
+              >
+                {card.body || '더 많은 스타트업 소식이\n궁금하다면?'}
+              </p>
+
+              {/* CTA 버튼 스타일 */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 20,
+                }}
+              >
+                <div
+                  style={{
+                    padding: '18px 48px',
+                    backgroundColor: design.accentColor,
+                    color: design.backgroundColor,
+                    borderRadius: 50,
+                    fontSize: 30,
+                    fontWeight: 800,
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  @every_startup 팔로우
+                </div>
+              </div>
+
+              {/* 구분선 */}
+              <div
+                style={{
+                  width: 60,
+                  height: 2,
+                  backgroundColor: design.textColor,
+                  opacity: 0.2,
+                }}
+              />
+
+              {/* 출처 */}
+              <p
+                style={{
+                  fontSize: 22,
+                  fontWeight: 300,
+                  lineHeight: 1.5,
+                  margin: 0,
+                  opacity: 0.5,
+                  wordBreak: 'keep-all',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {card.source || '출처를 입력하세요'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ====== 하단 바 ====== */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: BOTTOM_BAR_HEIGHT,
+            padding: '0 60px',
+            backgroundColor: 'rgba(0,0,0,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxSizing: 'border-box',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 20,
+              fontWeight: 400,
+              opacity: 0.7,
+              color: design.textColor,
+              textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+            }}
+          >
+            세상의 모든 스타트업 | 모든 여정을 응원합니다
+          </span>
+          <span
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: design.textColor,
+              opacity: 0.9,
+              textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+            }}
+          >
+            @every_startup
+          </span>
+        </div>
+      </div>
+    );
+  }
+);
+
+CardCanvas.displayName = 'CardCanvas';
+export default CardCanvas;

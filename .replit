@@ -1,0 +1,17 @@
+run = "npm run build && npm start"
+entrypoint = "server.js"
+
+[nix]
+channel = "stable-24_05"
+
+[env]
+PORT = "3000"
+# ACCESS_CODE는 Replit Secrets 탭에서 설정하세요 (코드에 노출 금지)
+
+[deployment]
+run = ["sh", "-c", "npm run build && npm start"]
+build = ["sh", "-c", "npm install"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
