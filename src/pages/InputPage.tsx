@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { CardData } from '../types';
-import { crawlUrl, summarizeArticle, getServerConfig } from '../utils/api';
+import {
+  crawlUrl,
+  summarizeArticle,
+  summarizeFundingArticle,
+  scrapeHiring,
+  buildFundingCards,
+  getServerConfig,
+} from '../utils/api';
+
+type Mode = 'general' | 'funding';
 
 interface InputPageProps {
   onGenerate: (cards: CardData[]) => void;
@@ -8,6 +17,7 @@ interface InputPageProps {
 
 export default function InputPage({ onGenerate }: InputPageProps) {
   const [url, setUrl] = useState('');
+  const [mode, setMode] = useState<Mode>('funding');
   const [accessCode, setAccessCode] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [cardCount, setCardCount] = useState(5);
@@ -33,16 +43,32 @@ export default function InputPage({ onGenerate }: InputPageProps) {
 
     try {
       const article = await crawlUrl(url.trim());
-      setStatus('카드뉴스 텍스트를 생성하는 중...');
 
-      const result = await summarizeArticle(
-        article.title,
-        article.content,
-        cardCount,
-        accessCode || undefined
-      );
+      if (mode === 'funding') {
+        // 투자 뉴스 모드
+        setStatus('투자 정보를 분석하는 중...');
+        const funding = await summarizeFundingArticle(
+          article.title,
+          article.content,
+          accessCode || undefined
+        );
 
-      onGenerate(result.cards);
+        setStatus('채용 정보를 검색하는 중...');
+        const hiring = await scrapeHiring(funding.companyName);
+
+        const cards = buildFundingCards(funding, hiring.positions);
+        onGenerate(cards);
+      } else {
+        // 일반 모드
+        setStatus('카드뉴스 텍스트를 생성하는 중...');
+        const result = await summarizeArticle(
+          article.title,
+          article.content,
+          cardCount,
+          accessCode || undefined
+        );
+        onGenerate(result.cards);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : '오류가 발생했습니다.'
@@ -69,6 +95,46 @@ export default function InputPage({ onGenerate }: InputPageProps) {
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 p-8 space-y-6"
         >
+          {/* 모드 선택 */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              카드뉴스 유형
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setMode('funding')}
+                disabled={loading}
+                className={`py-3 px-4 rounded-xl border-2 text-sm font-semibold transition-all ${
+                  mode === 'funding'
+                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-lg mb-1">&#x1F4B0;</div>
+                투자 뉴스
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('general')}
+                disabled={loading}
+                className={`py-3 px-4 rounded-xl border-2 text-sm font-semibold transition-all ${
+                  mode === 'general'
+                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                <div className="text-lg mb-1">&#x1F4F0;</div>
+                일반 기사
+              </button>
+            </div>
+            {mode === 'funding' && (
+              <p className="text-xs text-indigo-500 mt-2">
+                표지 → 서비스/라운드/투자사 → 투자 이유 → 채용 정보 (4장 고정)
+              </p>
+            )}
+          </div>
+
           {/* URL 입력 */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -85,25 +151,27 @@ export default function InputPage({ onGenerate }: InputPageProps) {
             />
           </div>
 
-          {/* 카드 수 */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              카드 수: {cardCount}장
-            </label>
-            <input
-              type="range"
-              min={2}
-              max={10}
-              value={cardCount}
-              onChange={(e) => setCardCount(Number(e.target.value))}
-              className="w-full accent-indigo-500"
-              disabled={loading}
-            />
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>2장</span>
-              <span>10장</span>
+          {/* 카드 수 (일반 모드에서만 표시) */}
+          {mode === 'general' && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                카드 수: {cardCount}장
+              </label>
+              <input
+                type="range"
+                min={2}
+                max={10}
+                value={cardCount}
+                onChange={(e) => setCardCount(Number(e.target.value))}
+                className="w-full accent-indigo-500"
+                disabled={loading}
+              />
+              <div className="flex justify-between text-xs text-slate-400 mt-1">
+                <span>2장</span>
+                <span>10장</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* AI 요약 설정 */}
           {serverConfig.hasServerAI && (

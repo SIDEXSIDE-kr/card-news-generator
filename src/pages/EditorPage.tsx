@@ -84,7 +84,54 @@ export default function EditorPage({
   const cardTypeLabel = (type: string, index: number) => {
     if (type === 'title') return '표지';
     if (type === 'ending') return '마무리';
+    if (type === 'funding-cover') return '표지';
+    if (type === 'funding-overview') return '서비스 개요';
+    if (type === 'funding-analysis') return '투자 이유';
+    if (type === 'funding-hiring') return '채용 정보';
     return `본문 ${index}`;
+  };
+
+  const updateArrayField = (
+    index: number,
+    field: 'investors' | 'reasons' | 'positions',
+    itemIndex: number,
+    value: string
+  ) => {
+    setCards((prev) =>
+      prev.map((card, i) => {
+        if (i !== index) return card;
+        const arr = [...(card[field] || [])];
+        arr[itemIndex] = value;
+        return { ...card, [field]: arr };
+      })
+    );
+  };
+
+  const addArrayItem = (
+    index: number,
+    field: 'investors' | 'reasons' | 'positions'
+  ) => {
+    setCards((prev) =>
+      prev.map((card, i) => {
+        if (i !== index) return card;
+        return { ...card, [field]: [...(card[field] || []), ''] };
+      })
+    );
+  };
+
+  const removeArrayItem = (
+    index: number,
+    field: 'investors' | 'reasons' | 'positions',
+    itemIndex: number
+  ) => {
+    setCards((prev) =>
+      prev.map((card, i) => {
+        if (i !== index) return card;
+        const arr = [...(card[field] || [])];
+        arr.splice(itemIndex, 1);
+        return { ...card, [field]: arr };
+      })
+    );
   };
 
   return (
@@ -194,6 +241,180 @@ export default function EditorPage({
                       }
                       placeholder="출처"
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* 투자 뉴스: 표지 */}
+                {card.type === 'funding-cover' && (
+                  <div className="space-y-2">
+                    <input
+                      value={card.weekLabel || ''}
+                      onChange={(e) =>
+                        updateCard(index, { weekLabel: e.target.value })
+                      }
+                      placeholder="0월 0주차"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-indigo-500"
+                    />
+                    <input
+                      value={card.companyName || ''}
+                      onChange={(e) =>
+                        updateCard(index, { companyName: e.target.value })
+                      }
+                      placeholder="기업명"
+                      className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                    />
+                    <input
+                      value={card.round || ''}
+                      onChange={(e) =>
+                        updateCard(index, { round: e.target.value })
+                      }
+                      placeholder="투자 라운드 (예: Series A)"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* 투자 뉴스: 서비스 개요 */}
+                {card.type === 'funding-overview' && (
+                  <div className="space-y-2">
+                    <input
+                      value={card.serviceName || ''}
+                      onChange={(e) =>
+                        updateCard(index, { serviceName: e.target.value })
+                      }
+                      placeholder="서비스명"
+                      className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                    />
+                    <input
+                      value={card.roundAmount || ''}
+                      onChange={(e) =>
+                        updateCard(index, { roundAmount: e.target.value })
+                      }
+                      placeholder="라운드 규모 (예: Pre-A 30억)"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-indigo-500"
+                    />
+                    <label className="block text-xs font-medium text-slate-500 mt-1">
+                      투자사
+                    </label>
+                    {(card.investors || []).map((inv, i) => (
+                      <div key={i} className="flex gap-1">
+                        <input
+                          value={inv}
+                          onChange={(e) =>
+                            updateArrayField(index, 'investors', i, e.target.value)
+                          }
+                          placeholder={`투자사 ${i + 1}`}
+                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeArrayItem(index, 'investors', i);
+                          }}
+                          className="px-2 text-red-400 hover:text-red-600 text-xs"
+                        >
+                          &#10005;
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addArrayItem(index, 'investors');
+                      }}
+                      className="text-xs text-indigo-500 hover:text-indigo-700"
+                    >
+                      + 투자사 추가
+                    </button>
+                  </div>
+                )}
+
+                {/* 투자 뉴스: 투자 이유 */}
+                {card.type === 'funding-analysis' && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-slate-500">
+                      왜 투자받았을까?
+                    </label>
+                    {(card.reasons || []).map((reason, i) => (
+                      <div key={i} className="flex gap-1">
+                        <span className="px-2 py-2 text-sm text-indigo-500 font-bold">
+                          {i + 1}.
+                        </span>
+                        <input
+                          value={reason}
+                          onChange={(e) =>
+                            updateArrayField(index, 'reasons', i, e.target.value)
+                          }
+                          placeholder={`이유 ${i + 1}`}
+                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeArrayItem(index, 'reasons', i);
+                          }}
+                          className="px-2 text-red-400 hover:text-red-600 text-xs"
+                        >
+                          &#10005;
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addArrayItem(index, 'reasons');
+                      }}
+                      className="text-xs text-indigo-500 hover:text-indigo-700"
+                    >
+                      + 이유 추가
+                    </button>
+                  </div>
+                )}
+
+                {/* 투자 뉴스: 채용 정보 */}
+                {card.type === 'funding-hiring' && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-slate-500">
+                      채용 중인 직군
+                    </label>
+                    {(card.positions || []).map((pos, i) => (
+                      <div key={i} className="flex gap-1">
+                        <input
+                          value={pos}
+                          onChange={(e) =>
+                            updateArrayField(index, 'positions', i, e.target.value)
+                          }
+                          placeholder={`직군 ${i + 1}`}
+                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeArrayItem(index, 'positions', i);
+                          }}
+                          className="px-2 text-red-400 hover:text-red-600 text-xs"
+                        >
+                          &#10005;
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addArrayItem(index, 'positions');
+                      }}
+                      className="text-xs text-indigo-500 hover:text-indigo-700"
+                    >
+                      + 직군 추가
+                    </button>
+                    <input
+                      value={card.source || ''}
+                      onChange={(e) =>
+                        updateCard(index, { source: e.target.value })
+                      }
+                      placeholder="출처"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none mt-2"
                     />
                   </div>
                 )}

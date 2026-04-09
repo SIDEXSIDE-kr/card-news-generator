@@ -1,11 +1,32 @@
 export interface CardData {
   id: string;
-  type: 'title' | 'body' | 'ending';
+  type: 'title' | 'body' | 'ending' | 'funding-cover' | 'funding-overview' | 'funding-analysis' | 'funding-hiring';
   title?: string;
   subtitle?: string;
   body?: string;
   source?: string;
   tags?: string;
+  // Funding-specific fields
+  weekLabel?: string;
+  companyName?: string;
+  round?: string;
+  serviceName?: string;
+  roundAmount?: string;
+  investors?: string[];
+  reasons?: string[];
+  positions?: string[];
+}
+
+export interface FundingData {
+  weekLabel: string;
+  companyName: string;
+  serviceName: string;
+  round: string;
+  amount: string;
+  roundAmount: string;
+  investors: string[];
+  reasons: string[];
+  source: string;
 }
 
 export interface DesignConfig {

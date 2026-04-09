@@ -209,6 +209,187 @@ app.post('/api/summarize', summarizeLimiter, async (req, res) => {
   }
 });
 
+// ========================================
+// 투자 뉴스 전용 요약 엔드포인트
+// ========================================
+app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
+  try {
+    const { title, content, accessCode } = req.body;
+
+    const serverKey = process.env.ANTHROPIC_API_KEY;
+    const requiredCode = process.env.ACCESS_CODE;
+
+    let aiKey = null;
+    if (serverKey) {
+      if (requiredCode) {
+        if (!accessCode || accessCode !== requiredCode) {
+          return res.status(403).json({ error: 'AI 기능을 사용하려면 올바른 액세스 코드가 필요합니다.' });
+        }
+      }
+      aiKey = serverKey;
+    }
+
+    if (!aiKey) {
+      return res.status(503).json({ error: '투자 뉴스 모드는 AI가 필요합니다. ANTHROPIC_API_KEY를 설정해주세요.' });
+    }
+
+    const Anthropic = (await import('@anthropic-ai/sdk')).default;
+    const client = new Anthropic({ apiKey: aiKey });
+
+    // 현재 월/주차 계산
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+    // 일요일=0 기준, 월요일 시작 주차 계산
+    const weekNumber = Math.ceil((day + ((firstDayOfMonth + 6) % 7)) / 7);
+    const weekLabel = `${month}월 ${weekNumber}주차`;
+
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2000,
+      system: `당신은 스타트업 투자 뉴스 분석 전문가입니다. 아래 기사에서 투자 정보를 구조화하여 추출해주세요.
+
+반드시 아래 JSON 형식으로만 출력하세요. 다른 텍스트 없이 JSON만 출력하세요.
+
+{
+  "companyName": "투자받은 기업명",
+  "serviceName": "서비스/제품명 (기업명과 다를 수 있음, 같으면 기업명과 동일하게)",
+  "round": "투자 라운드 (예: Seed, Pre-A, Series A, Series B 등)",
+  "amount": "투자 금액 (예: 30억, 100억 등)",
+  "investors": ["투자사1", "투자사2"],
+  "reasons": ["투자 이유 1 (한 줄 요약)", "투자 이유 2", "투자 이유 3"],
+  "source": "출처: 매체명"
+}
+
+규칙:
+1. 기사에서 명확히 언급된 정보만 추출하세요.
+2. reasons는 기사에서 투자 이유/배경을 3~5개 핵심 포인트로 요약하세요.
+3. 각 reason은 ~에요/~해요체로, 한 줄(30자 이내)로 작성하세요.
+4. 투자사는 기사에 언급된 모든 투자사를 포함하세요 (리드 투자사를 맨 앞에).
+5. 금액이 명시되지 않았으면 "비공개"로 표시하세요.
+6. round가 명확하지 않으면 기사 맥락에서 유추하되, 불확실하면 "투자"로 표시하세요.`,
+      messages: [
+        {
+          role: 'user',
+          content: `기사 제목: ${title}\n\n기사 본문:\n${content.substring(0, 5000)}`,
+        },
+      ],
+    });
+
+    const responseText = message.content[0].text;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) {
+      return res.status(500).json({ error: 'AI 응답을 파싱할 수 없습니다.' });
+    }
+
+    const data = JSON.parse(jsonMatch[0]);
+
+    res.json({
+      weekLabel,
+      companyName: data.companyName || '기업명',
+      serviceName: data.serviceName || data.companyName || '서비스명',
+      round: data.round || '투자',
+      amount: data.amount || '비공개',
+      roundAmount: `${data.round || '투자'} ${data.amount || ''}`.trim(),
+      investors: data.investors || [],
+      reasons: data.reasons || [],
+      source: data.source || '출처: 원문 기사',
+    });
+  } catch (error) {
+    console.error('Funding summarize error:', error.message);
+    res.status(500).json({ error: '투자 정보 추출에 실패했습니다.' });
+  }
+});
+
+// ========================================
+// 채용 정보 스크래핑 엔드포인트
+// ========================================
+app.post('/api/scrape-hiring', crawlLimiter, async (req, res) => {
+  try {
+    const { companyName } = req.body;
+    if (!companyName) {
+      return res.status(400).json({ error: '회사명을 입력해주세요.', positions: [] });
+    }
+
+    const positions = [];
+
+    // 1) 원티드 API 시도
+    try {
+      const wantedRes = await axios.get('https://www.wanted.co.kr/api/v4/jobs', {
+        params: {
+          query: companyName,
+          country: 'kr',
+          job_sort: 'job.latest_order',
+          years: -1,
+          limit: 20,
+          offset: 0,
+        },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'ko-KR,ko;q=0.9',
+        },
+        timeout: 10000,
+      });
+
+      if (wantedRes.data && wantedRes.data.data) {
+        for (const job of wantedRes.data.data) {
+          if (job.position) {
+            positions.push(job.position);
+          } else if (job.title) {
+            positions.push(job.title);
+          }
+        }
+      }
+
+      if (positions.length > 0) {
+        return res.json({ positions: [...new Set(positions)].slice(0, 10), source: 'wanted.co.kr' });
+      }
+    } catch (e) {
+      // wanted API 실패, 다음 방법 시도
+    }
+
+    // 2) 원티드 검색 페이지 HTML 파싱 시도
+    try {
+      const searchUrl = `https://www.wanted.co.kr/search?query=${encodeURIComponent(companyName)}&tab=position`;
+      const response = await axios.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'ko-KR,ko;q=0.9',
+        },
+        timeout: 10000,
+      });
+
+      const html = typeof response.data === 'string' ? response.data : '';
+      // __NEXT_DATA__ 에서 job 정보 추출 시도
+      const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+      if (nextDataMatch) {
+        const nextData = JSON.parse(nextDataMatch[1]);
+        const jobs = nextData?.props?.pageProps?.jobs || nextData?.props?.pageProps?.data || [];
+        if (Array.isArray(jobs)) {
+          for (const job of jobs) {
+            const title = job.position || job.title || job.name;
+            if (title) positions.push(title);
+          }
+        }
+      }
+
+      if (positions.length > 0) {
+        return res.json({ positions: [...new Set(positions)].slice(0, 10), source: 'wanted.co.kr' });
+      }
+    } catch (e) {
+      // HTML 파싱 실패
+    }
+
+    // 3) 채용 정보를 찾지 못한 경우
+    res.json({ positions: [], source: null });
+  } catch (error) {
+    console.error('Hiring scrape error:', error.message);
+    res.json({ positions: [], source: null });
+  }
+});
+
 function simpleTextSplit(title, content, cardCount) {
   // 텍스트 정리
   const cleanContent = content

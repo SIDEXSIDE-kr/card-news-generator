@@ -1,4 +1,4 @@
-import { CardData, generateId } from '../types';
+import { CardData, FundingData, generateId } from '../types';
 
 interface CrawlResponse {
   title: string;
@@ -68,4 +68,76 @@ export async function summarizeArticle(
   }));
 
   return { cards, aiUsed: data.aiUsed };
+}
+
+// ========================================
+// 투자 뉴스 전용 API
+// ========================================
+
+export async function summarizeFundingArticle(
+  title: string,
+  content: string,
+  accessCode?: string
+): Promise<FundingData> {
+  const res = await fetch('/api/summarize-funding', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, content, accessCode }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || '투자 정보 추출에 실패했습니다.');
+  }
+
+  return res.json();
+}
+
+export async function scrapeHiring(
+  companyName: string
+): Promise<{ positions: string[]; source: string | null }> {
+  const res = await fetch('/api/scrape-hiring', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ companyName }),
+  });
+
+  if (!res.ok) {
+    return { positions: [], source: null };
+  }
+
+  return res.json();
+}
+
+export function buildFundingCards(
+  funding: FundingData,
+  positions: string[]
+): CardData[] {
+  return [
+    {
+      id: generateId(),
+      type: 'funding-cover',
+      weekLabel: funding.weekLabel,
+      companyName: funding.companyName,
+      round: funding.round,
+    },
+    {
+      id: generateId(),
+      type: 'funding-overview',
+      serviceName: funding.serviceName,
+      roundAmount: funding.roundAmount,
+      investors: funding.investors,
+    },
+    {
+      id: generateId(),
+      type: 'funding-analysis',
+      reasons: funding.reasons,
+    },
+    {
+      id: generateId(),
+      type: 'funding-hiring',
+      positions: positions.length > 0 ? positions : [],
+      source: funding.source,
+    },
+  ];
 }

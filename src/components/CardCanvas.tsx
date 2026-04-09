@@ -97,6 +97,399 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
             boxSizing: 'border-box',
           }}
         >
+          {/* ====== 투자 뉴스: 표지 카드 ====== */}
+          {card.type === 'funding-cover' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 32,
+                textAlign: design.textAlign,
+                alignItems:
+                  design.textAlign === 'center' ? 'center' : 'flex-start',
+              }}
+            >
+              {/* 주차 라벨 */}
+              <span
+                style={{
+                  fontSize: 28,
+                  fontWeight: 600,
+                  color: design.accentColor,
+                  letterSpacing: '1px',
+                  opacity: 0.9,
+                }}
+              >
+                {card.weekLabel || '0월 0주차'}
+              </span>
+
+              {/* 장식 라인 */}
+              <div
+                style={{
+                  width: 60,
+                  height: 4,
+                  backgroundColor: design.accentColor,
+                  borderRadius: 2,
+                  alignSelf:
+                    design.textAlign === 'center' ? 'center' : 'flex-start',
+                }}
+              />
+
+              {/* 기업명 */}
+              <h1
+                style={{
+                  fontSize: 80,
+                  fontWeight: 900,
+                  lineHeight: 1.2,
+                  margin: 0,
+                  wordBreak: 'keep-all',
+                  whiteSpace: 'pre-wrap',
+                  textShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  letterSpacing: '-1px',
+                }}
+              >
+                {card.companyName || '기업명'}
+              </h1>
+
+              {/* 라운드 */}
+              <span
+                style={{
+                  fontSize: 36,
+                  fontWeight: 700,
+                  color: design.accentColor,
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {card.round || 'Series A'}
+              </span>
+
+              {/* 투자 유치 */}
+              <p
+                style={{
+                  fontSize: 56,
+                  fontWeight: 800,
+                  lineHeight: 1.3,
+                  margin: 0,
+                  opacity: 0.95,
+                  wordBreak: 'keep-all',
+                  whiteSpace: 'pre-wrap',
+                  textShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  letterSpacing: '2px',
+                }}
+              >
+                투자 유치
+              </p>
+            </div>
+          )}
+
+          {/* ====== 투자 뉴스: 개요 카드 ====== */}
+          {card.type === 'funding-overview' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 40,
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              {/* 서비스명 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: design.accentColor,
+                    letterSpacing: '2px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  서비스
+                </span>
+                <span
+                  style={{
+                    fontSize: 48,
+                    fontWeight: 800,
+                    lineHeight: 1.3,
+                    wordBreak: 'keep-all',
+                  }}
+                >
+                  {card.serviceName || '서비스명'}
+                </span>
+              </div>
+
+              {/* 구분선 */}
+              <div
+                style={{
+                  width: '100%',
+                  height: 1,
+                  backgroundColor: design.textColor,
+                  opacity: 0.15,
+                }}
+              />
+
+              {/* 라운드 · 규모 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: design.accentColor,
+                    letterSpacing: '2px',
+                  }}
+                >
+                  라운드 · 규모
+                </span>
+                <span
+                  style={{
+                    fontSize: 48,
+                    fontWeight: 800,
+                    lineHeight: 1.3,
+                    color: design.accentColor,
+                  }}
+                >
+                  {card.roundAmount || 'Pre-A 30억'}
+                </span>
+              </div>
+
+              {/* 구분선 */}
+              <div
+                style={{
+                  width: '100%',
+                  height: 1,
+                  backgroundColor: design.textColor,
+                  opacity: 0.15,
+                }}
+              />
+
+              {/* 투자사 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <span
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: design.accentColor,
+                    letterSpacing: '2px',
+                  }}
+                >
+                  투자사
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {(card.investors && card.investors.length > 0
+                    ? card.investors
+                    : ['투자사 정보 없음']
+                  ).map((investor, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        fontSize: 36,
+                        fontWeight: 600,
+                        lineHeight: 1.5,
+                        wordBreak: 'keep-all',
+                      }}
+                    >
+                      {investor}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ====== 투자 뉴스: 분석 카드 ====== */}
+          {card.type === 'funding-analysis' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 36,
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              {/* 제목 */}
+              <h2
+                style={{
+                  fontSize: 52,
+                  fontWeight: 900,
+                  lineHeight: 1.3,
+                  margin: 0,
+                  color: design.accentColor,
+                  wordBreak: 'keep-all',
+                  textShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                }}
+              >
+                왜 투자받았을까?
+              </h2>
+              <div
+                style={{
+                  width: 48,
+                  height: 3,
+                  backgroundColor: design.accentColor,
+                  borderRadius: 2,
+                  opacity: 0.6,
+                }}
+              />
+
+              {/* 이유 목록 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {(card.reasons && card.reasons.length > 0
+                  ? card.reasons
+                  : ['투자 이유를 입력하세요']
+                ).map((reason, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 16,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 34,
+                        fontWeight: 800,
+                        color: design.accentColor,
+                        lineHeight: 1.7,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {i + 1}.
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 34,
+                        fontWeight: 500,
+                        lineHeight: 1.7,
+                        wordBreak: 'keep-all',
+                      }}
+                    >
+                      {reason}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ====== 투자 뉴스: 채용 카드 ====== */}
+          {card.type === 'funding-hiring' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 36,
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              {/* 제목 */}
+              <h2
+                style={{
+                  fontSize: 52,
+                  fontWeight: 900,
+                  lineHeight: 1.3,
+                  margin: 0,
+                  color: design.accentColor,
+                  wordBreak: 'keep-all',
+                  textShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                }}
+              >
+                지금 채용 중!
+              </h2>
+              <div
+                style={{
+                  width: 48,
+                  height: 3,
+                  backgroundColor: design.accentColor,
+                  borderRadius: 2,
+                  opacity: 0.6,
+                }}
+              />
+
+              {/* 채용 목록 */}
+              {card.positions && card.positions.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {card.positions.map((pos, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          backgroundColor: design.accentColor,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: 34,
+                          fontWeight: 500,
+                          lineHeight: 1.6,
+                          wordBreak: 'keep-all',
+                        }}
+                      >
+                        {pos}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 20,
+                    padding: '40px 0',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 36,
+                      fontWeight: 500,
+                      opacity: 0.7,
+                      textAlign: 'center',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    현재 공개 채용 정보가 없어요
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 26,
+                      fontWeight: 400,
+                      opacity: 0.5,
+                      textAlign: 'center',
+                    }}
+                  >
+                    채용 페이지를 직접 확인해보세요
+                  </span>
+                </div>
+              )}
+
+              {/* 출처 */}
+              {card.source && (
+                <span
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 300,
+                    opacity: 0.4,
+                    marginTop: 'auto',
+                  }}
+                >
+                  {card.source}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* ====== 표지 카드 ====== */}
           {card.type === 'title' && (
             <div
