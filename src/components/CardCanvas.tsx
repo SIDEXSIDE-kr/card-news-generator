@@ -559,21 +559,23 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     width: 90,
                     height: 90,
                     borderRadius: '50%',
-                    backgroundColor: '#f3f4f6',
+                    backgroundColor: '#ffffff',
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'center',
+                    alignItems: 'flex-start',
                     flexShrink: 0,
                     overflow: 'hidden',
+                    border: '2px solid rgba(255,255,255,0.3)',
                   }}
                 >
                     <img
                     src="/profile.png"
                     alt="profile"
                     style={{
-                      width: '100%',
-                      height: '100%',
+                      width: '110%',
+                      height: 'auto',
                       objectFit: 'cover',
+                      marginTop: -4,
                     }}
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
@@ -861,7 +863,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
             right: 0,
             height: BOTTOM_BAR_HEIGHT,
             padding: '0 60px',
-            backgroundColor: 'rgba(0,0,0,0.15)',
+            backgroundColor: card.type === 'funding-cta' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',

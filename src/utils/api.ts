@@ -131,7 +131,8 @@ export async function scrapeHiring(
 
 export function buildFundingCards(
   funding: FundingData,
-  positions: string[]
+  positions: string[],
+  hiringSource?: string | null
 ): CardData[] {
   return [
     {
@@ -160,6 +161,7 @@ export function buildFundingCards(
       type: 'funding-hiring',
       positions: positions.length > 0 ? positions : [],
       source: funding.source,
+      hiringSource: hiringSource || undefined,
     },
     {
       id: generateId(),

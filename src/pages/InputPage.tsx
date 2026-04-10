@@ -56,7 +56,7 @@ export default function InputPage({ onGenerate }: InputPageProps) {
         setStatus('채용 정보를 검색하는 중...');
         const hiring = await scrapeHiring(funding.companyName);
 
-        const cards = buildFundingCards(funding, hiring.positions);
+        const cards = buildFundingCards(funding, hiring.positions, hiring.source);
         onGenerate(cards, funding.caption);
       } else {
         // 일반 모드

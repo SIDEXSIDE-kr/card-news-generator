@@ -15,6 +15,7 @@ export interface CardData {
   investors?: string[];
   reasons?: string[];
   positions?: string[];
+  hiringSource?: string;
   logoUrl?: string;
   emoji?: string;
 }

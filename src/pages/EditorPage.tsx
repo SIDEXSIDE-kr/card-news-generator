@@ -388,6 +388,21 @@ export default function EditorPage({
                 {/* 투자 뉴스: 채용 정보 */}
                 {card.type === 'funding-hiring' && (
                   <div className="space-y-2">
+                    {card.hiringSource ? (
+                      <div className="flex items-start gap-1 p-2 bg-emerald-50 rounded-lg">
+                        <span className="text-emerald-600 text-xs mt-0.5">&#10003;</span>
+                        <p className="text-xs text-emerald-700">
+                          출처: <span className="font-semibold">{card.hiringSource}</span>에서 가져온 정보입니다. 정확한지 확인해주세요.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-1 p-2 bg-amber-50 rounded-lg">
+                        <span className="text-amber-600 text-xs mt-0.5">!</span>
+                        <p className="text-xs text-amber-700">
+                          채용 정보를 자동으로 찾지 못했습니다. 직접 추가하거나 비워두세요.
+                        </p>
+                      </div>
+                    )}
                     <label className="block text-xs font-medium text-slate-500">
                       채용 중인 직군
                     </label>
