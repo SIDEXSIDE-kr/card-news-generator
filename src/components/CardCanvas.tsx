@@ -27,7 +27,7 @@ function renderHighlightedText(
     parts.push(
       <span
         key={`h-${match.index}`}
-        style={{ color: accentColor, fontWeight: 800 }}
+        style={{ color: accentColor, fontWeight: 600 }}
       >
         {match[0]}
       </span>
@@ -164,7 +164,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h1
                 style={{
                   fontSize: 88,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.2,
                   margin: 0,
                   wordBreak: 'keep-all',
@@ -179,7 +179,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h2
                 style={{
                   fontSize: 88,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.2,
                   margin: 0,
                   wordBreak: 'keep-all',
@@ -194,7 +194,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h2
                 style={{
                   fontSize: 88,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.2,
                   margin: 0,
                   letterSpacing: '-0.5px',
@@ -232,7 +232,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 <span
                   style={{
                     fontSize: 48,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     lineHeight: 1.3,
                     wordBreak: 'keep-all',
                   }}
@@ -266,7 +266,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 <span
                   style={{
                     fontSize: 48,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     lineHeight: 1.3,
                     color: design.accentColor,
                   }}
@@ -334,7 +334,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h2
                 style={{
                   fontSize: 52,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.3,
                   margin: 0,
                   color: design.accentColor,
@@ -371,7 +371,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     <span
                       style={{
                         fontSize: 34,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: design.accentColor,
                         lineHeight: 1.7,
                         flexShrink: 0,
@@ -410,7 +410,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h2
                 style={{
                   fontSize: 52,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.3,
                   margin: 0,
                   color: design.accentColor,
@@ -531,7 +531,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h2
                 style={{
                   fontSize: 56,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.3,
                   margin: 0,
                   color: '#1e293b',
@@ -587,10 +587,13 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 <span
                   style={{
                     fontSize: 36,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: '#ffffff',
                     flex: 1,
                     textAlign: 'left',
+                    lineHeight: '90px',
+                    height: 90,
+                    overflow: 'hidden',
                   }}
                 >
                   every_startup
@@ -599,13 +602,16 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 {/* 팔로우 버튼 */}
                 <div
                   style={{
-                    padding: '14px 36px',
+                    height: 56,
+                    lineHeight: '56px',
+                    padding: '0 36px',
                     backgroundColor: '#3b82f6',
                     borderRadius: 12,
                     fontSize: 28,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: '#ffffff',
                     flexShrink: 0,
+                    textAlign: 'center',
                   }}
                 >
                   팔로우
@@ -688,7 +694,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <h1
                 style={{
                   fontSize: 68,
-                  fontWeight: 900,
+                  fontWeight: 700,
                   lineHeight: 1.3,
                   margin: 0,
                   wordBreak: 'keep-all',
@@ -735,7 +741,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   <h2
                     style={{
                       fontSize: 48,
-                      fontWeight: 800,
+                      fontWeight: 600,
                       lineHeight: 1.35,
                       margin: 0,
                       color: design.accentColor,
@@ -818,7 +824,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     color: design.backgroundColor,
                     borderRadius: 50,
                     fontSize: 30,
-                    fontWeight: 800,
+                    fontWeight: 600,
                     letterSpacing: '0.5px',
                   }}
                 >
@@ -875,8 +881,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               fontSize: 20,
               fontWeight: 400,
               opacity: 0.7,
-              color: design.textColor,
-              textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
+              lineHeight: `${BOTTOM_BAR_HEIGHT}px`,
+              height: BOTTOM_BAR_HEIGHT,
             }}
           >
             세상의 모든 스타트업 | 모든 여정을 응원합니다
@@ -884,10 +891,11 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           <span
             style={{
               fontSize: 22,
-              fontWeight: 700,
-              color: design.textColor,
+              fontWeight: 600,
+              color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
               opacity: 0.9,
-              textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+              lineHeight: `${BOTTOM_BAR_HEIGHT}px`,
+              height: BOTTOM_BAR_HEIGHT,
             }}
           >
             @every_startup
