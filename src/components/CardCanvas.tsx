@@ -145,7 +145,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               }}
             >
               {/* 주차 뱃지 */}
-              <div style={{ marginBottom: 40 }}>
+              <div style={{ marginBottom: 20 }}>
                 <span
                   style={{
                     display: 'inline-block',
