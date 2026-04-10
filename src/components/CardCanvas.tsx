@@ -53,8 +53,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           width: 1080,
           height: 1350,
           position: 'relative',
-          backgroundColor: design.backgroundColor,
-          color: design.textColor,
+          backgroundColor: card.type === 'funding-cta' ? '#ffffff' : design.backgroundColor,
+          color: card.type === 'funding-cta' ? '#1e293b' : design.textColor,
           fontFamily: design.fontFamily,
           overflow: 'hidden',
         }}
@@ -100,13 +100,13 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <div
                 style={{
                   position: 'absolute',
-                  top: 100,
+                  top: 60,
                   left: 0,
                   right: 0,
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: 400,
+                  height: 500,
                   pointerEvents: 'none',
                 }}
               >
@@ -114,8 +114,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   src={card.logoUrl}
                   alt="logo"
                   style={{
-                    maxWidth: 500,
-                    maxHeight: 300,
+                    maxWidth: 700,
+                    maxHeight: 420,
                     objectFit: 'contain',
                   }}
                 />
@@ -151,16 +151,16 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               }}
             >
               {/* 주차 뱃지 */}
-              <div style={{ marginBottom: 24 }}>
+              <div style={{ marginBottom: 28 }}>
                 <span
                   style={{
                     display: 'inline-block',
-                    fontSize: 26,
+                    fontSize: 32,
                     fontWeight: 700,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '8px 20px',
-                    borderRadius: 6,
+                    padding: '10px 24px',
+                    borderRadius: 8,
                     letterSpacing: '0.5px',
                   }}
                 >
@@ -171,9 +171,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               {/* 기업명 */}
               <h1
                 style={{
-                  fontSize: 72,
+                  fontSize: 88,
                   fontWeight: 900,
-                  lineHeight: 1.25,
+                  lineHeight: 1.2,
                   margin: 0,
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
@@ -186,9 +186,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               {/* 금액 + 라운드 */}
               <h2
                 style={{
-                  fontSize: 72,
+                  fontSize: 88,
                   fontWeight: 900,
-                  lineHeight: 1.25,
+                  lineHeight: 1.2,
                   margin: 0,
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
@@ -201,9 +201,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               {/* 투자 유치 */}
               <h2
                 style={{
-                  fontSize: 72,
+                  fontSize: 88,
                   fontWeight: 900,
-                  lineHeight: 1.25,
+                  lineHeight: 1.2,
                   margin: 0,
                   letterSpacing: '-0.5px',
                 }}
@@ -519,6 +519,110 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   {card.source}
                 </span>
               )}
+            </div>
+          )}
+
+          {/* ====== 투자 뉴스: CTA 팔로우 카드 ====== */}
+          {card.type === 'funding-cta' && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                textAlign: 'center',
+                gap: 48,
+              }}
+            >
+              {/* 메인 타이틀 */}
+              <h2
+                style={{
+                  fontSize: 56,
+                  fontWeight: 900,
+                  lineHeight: 1.3,
+                  margin: 0,
+                  color: design.textColor,
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                세상의 모든 스타트업
+              </h2>
+
+              {/* 인스타 프로필 카드 */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 24,
+                  backgroundColor: 'rgba(0,0,0,0.85)',
+                  borderRadius: 24,
+                  padding: '24px 40px',
+                  minWidth: 500,
+                }}
+              >
+                {/* 프로필 아이콘 */}
+                <div
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    backgroundColor: '#e5e7eb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: 40,
+                  }}
+                >
+                  &#128100;
+                </div>
+
+                {/* 유저네임 */}
+                <span
+                  style={{
+                    fontSize: 36,
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    flex: 1,
+                    textAlign: 'left',
+                  }}
+                >
+                  every_startup
+                </span>
+
+                {/* 팔로우 버튼 */}
+                <div
+                  style={{
+                    padding: '14px 36px',
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 12,
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    flexShrink: 0,
+                  }}
+                >
+                  팔로우
+                </div>
+              </div>
+
+              {/* 설명 문구 */}
+              <p
+                style={{
+                  fontSize: 36,
+                  fontWeight: 600,
+                  lineHeight: 1.7,
+                  margin: 0,
+                  color: design.textColor,
+                  opacity: 0.8,
+                  wordBreak: 'keep-all',
+                }}
+              >
+                팔로우하면{'\n'}
+                스타트업 최신 소식과 정보를{'\n'}
+                빠르게 만날 수 있어요!
+              </p>
             </div>
           )}
 

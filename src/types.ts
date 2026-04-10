@@ -1,6 +1,6 @@
 export interface CardData {
   id: string;
-  type: 'title' | 'body' | 'ending' | 'funding-cover' | 'funding-overview' | 'funding-analysis' | 'funding-hiring';
+  type: 'title' | 'body' | 'ending' | 'funding-cover' | 'funding-overview' | 'funding-analysis' | 'funding-hiring' | 'funding-cta';
   title?: string;
   subtitle?: string;
   body?: string;

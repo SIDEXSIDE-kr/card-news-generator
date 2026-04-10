@@ -162,5 +162,9 @@ export function buildFundingCards(
       positions: positions.length > 0 ? positions : [],
       source: funding.source,
     },
+    {
+      id: generateId(),
+      type: 'funding-cta',
+    },
   ];
 }

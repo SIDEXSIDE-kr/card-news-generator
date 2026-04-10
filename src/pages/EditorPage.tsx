@@ -88,6 +88,7 @@ export default function EditorPage({
     if (type === 'funding-overview') return '서비스 개요';
     if (type === 'funding-analysis') return '투자 이유';
     if (type === 'funding-hiring') return '채용 정보';
+    if (type === 'funding-cta') return '팔로우 CTA';
     return `본문 ${index}`;
   };
 

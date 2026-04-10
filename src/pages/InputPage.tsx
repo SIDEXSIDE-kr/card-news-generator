@@ -134,7 +134,7 @@ export default function InputPage({ onGenerate }: InputPageProps) {
             </div>
             {mode === 'funding' && (
               <p className="text-xs text-indigo-500 mt-2">
-                표지 → 서비스/라운드/투자사 → 투자 이유 → 채용 정보 (4장 고정)
+                표지 → 서비스/라운드/투자사 → 투자 이유 → 채용 정보 → 팔로우 CTA (5장 고정)
               </p>
             )}
           </div>
