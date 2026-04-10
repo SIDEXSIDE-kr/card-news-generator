@@ -93,6 +93,26 @@ export async function summarizeFundingArticle(
   return res.json();
 }
 
+export async function fetchLogo(
+  companyWebsite: string
+): Promise<string | null> {
+  if (!companyWebsite) return null;
+
+  try {
+    const res = await fetch('/api/fetch-logo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ companyWebsite }),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.logoUrl || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function scrapeHiring(
   companyName: string
 ): Promise<{ positions: string[]; source: string | null }> {
@@ -111,7 +131,8 @@ export async function scrapeHiring(
 
 export function buildFundingCards(
   funding: FundingData,
-  positions: string[]
+  positions: string[],
+  logoUrl?: string | null
 ): CardData[] {
   return [
     {
@@ -121,6 +142,7 @@ export function buildFundingCards(
       companyName: funding.companyName,
       round: funding.round,
       roundAmount: `${funding.amount || ''} ${funding.round || ''}`.trim(),
+      logoUrl: logoUrl || undefined,
     },
     {
       id: generateId(),

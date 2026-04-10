@@ -255,6 +255,7 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
 {
   "companyName": "투자받은 기업명",
   "serviceName": "서비스/제품명 (기업명과 다를 수 있음, 같으면 기업명과 동일하게)",
+  "companyWebsite": "회사 공식 웹사이트 URL (예: https://example.com)",
   "round": "투자 라운드 (예: Seed, Pre-A, Series A, Series B 등)",
   "amount": "투자 금액 (예: 30억, 100억 등)",
   "investors": ["투자사1", "투자사2"],
@@ -268,7 +269,8 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
 3. 각 reason은 ~에요/~해요체로, 한 줄(30자 이내)로 작성하세요.
 4. 투자사는 기사에 언급된 모든 투자사를 포함하세요 (리드 투자사를 맨 앞에).
 5. 금액이 명시되지 않았으면 "비공개"로 표시하세요.
-6. round가 명확하지 않으면 기사 맥락에서 유추하되, 불확실하면 "투자"로 표시하세요.`,
+6. round가 명확하지 않으면 기사 맥락에서 유추하되, 불확실하면 "투자"로 표시하세요.
+7. companyWebsite는 기사에 언급된 회사 공식 웹사이트 URL을 추출하세요. 없으면 빈 문자열로.`,
       messages: [
         {
           role: 'user',
@@ -290,6 +292,7 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
       weekLabel,
       companyName: data.companyName || '기업명',
       serviceName: data.serviceName || data.companyName || '서비스명',
+      companyWebsite: data.companyWebsite || '',
       round: data.round || '투자',
       amount: data.amount || '비공개',
       roundAmount: `${data.round || '투자'} ${data.amount || ''}`.trim(),
@@ -300,6 +303,117 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
   } catch (error) {
     console.error('Funding summarize error:', error.message);
     res.status(500).json({ error: '투자 정보 추출에 실패했습니다.' });
+  }
+});
+
+// ========================================
+// 로고 스크래핑 엔드포인트
+// ========================================
+app.post('/api/fetch-logo', crawlLimiter, async (req, res) => {
+  try {
+    const { companyWebsite } = req.body;
+    if (!companyWebsite) {
+      return res.json({ logoUrl: null });
+    }
+
+    // URL 정규화
+    let baseUrl = companyWebsite;
+    if (!baseUrl.startsWith('http')) {
+      baseUrl = 'https://' + baseUrl;
+    }
+
+    let logoSourceUrl = null;
+
+    // 1) 회사 웹사이트에서 og:image, apple-touch-icon, favicon 추출
+    try {
+      const siteRes = await axios.get(baseUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+        timeout: 10000,
+        maxRedirects: 5,
+      });
+
+      const html = typeof siteRes.data === 'string' ? siteRes.data : '';
+      const dom = new JSDOM(html, { url: baseUrl });
+      const doc = dom.window.document;
+
+      // og:image
+      const ogImage = doc.querySelector('meta[property="og:image"]');
+      if (ogImage && ogImage.getAttribute('content')) {
+        logoSourceUrl = new URL(ogImage.getAttribute('content'), baseUrl).href;
+      }
+
+      // apple-touch-icon (보통 깔끔한 정사각형 로고)
+      if (!logoSourceUrl) {
+        const touchIcon = doc.querySelector('link[rel="apple-touch-icon"], link[rel="apple-touch-icon-precomposed"]');
+        if (touchIcon && touchIcon.getAttribute('href')) {
+          logoSourceUrl = new URL(touchIcon.getAttribute('href'), baseUrl).href;
+        }
+      }
+
+      // 큰 사이즈 favicon
+      if (!logoSourceUrl) {
+        const icons = doc.querySelectorAll('link[rel="icon"]');
+        let bestSize = 0;
+        icons.forEach(icon => {
+          const sizes = icon.getAttribute('sizes') || '';
+          const sizeNum = parseInt(sizes.split('x')[0]) || 0;
+          if (sizeNum > bestSize && icon.getAttribute('href')) {
+            bestSize = sizeNum;
+            logoSourceUrl = new URL(icon.getAttribute('href'), baseUrl).href;
+          }
+        });
+      }
+
+      // 기본 favicon fallback
+      if (!logoSourceUrl) {
+        const favicon = doc.querySelector('link[rel="shortcut icon"], link[rel="icon"]');
+        if (favicon && favicon.getAttribute('href')) {
+          logoSourceUrl = new URL(favicon.getAttribute('href'), baseUrl).href;
+        }
+      }
+    } catch (e) {
+      // 사이트 접근 실패
+    }
+
+    // 2) Clearbit Logo API fallback
+    if (!logoSourceUrl) {
+      try {
+        const domain = new URL(baseUrl).hostname;
+        const clearbitUrl = `https://logo.clearbit.com/${domain}`;
+        await axios.head(clearbitUrl, { timeout: 5000 });
+        logoSourceUrl = clearbitUrl;
+      } catch (e) {
+        // Clearbit에도 없음
+      }
+    }
+
+    if (!logoSourceUrl) {
+      return res.json({ logoUrl: null });
+    }
+
+    // 이미지를 base64로 변환하여 반환 (CORS 회피)
+    try {
+      const imgRes = await axios.get(logoSourceUrl, {
+        responseType: 'arraybuffer',
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        },
+      });
+
+      const contentType = imgRes.headers['content-type'] || 'image/png';
+      const base64 = Buffer.from(imgRes.data).toString('base64');
+      const dataUrl = `data:${contentType};base64,${base64}`;
+
+      res.json({ logoUrl: dataUrl });
+    } catch (e) {
+      res.json({ logoUrl: null });
+    }
+  } catch (error) {
+    console.error('Logo fetch error:', error.message);
+    res.json({ logoUrl: null });
   }
 });
 

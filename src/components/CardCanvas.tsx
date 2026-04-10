@@ -82,19 +82,46 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           }}
         />
 
-        {/* 투자 표지: 상단 어두운 그라데이션 (로고 영역) */}
+        {/* 투자 표지: 상단 어두운 그라데이션 + 로고 */}
         {card.type === 'funding-cover' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '50%',
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
-              pointerEvents: 'none',
-            }}
-          />
+          <>
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '50%',
+                background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
+                pointerEvents: 'none',
+              }}
+            />
+            {card.logoUrl && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 100,
+                  left: 0,
+                  right: 0,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 400,
+                  pointerEvents: 'none',
+                }}
+              >
+                <img
+                  src={card.logoUrl}
+                  alt="logo"
+                  style={{
+                    maxWidth: 500,
+                    maxHeight: 300,
+                    objectFit: 'contain',
+                  }}
+                />
+              </div>
+            )}
+          </>
         )}
 
         {/* 컨텐츠 영역 */}

@@ -15,12 +15,14 @@ export interface CardData {
   investors?: string[];
   reasons?: string[];
   positions?: string[];
+  logoUrl?: string;
 }
 
 export interface FundingData {
   weekLabel: string;
   companyName: string;
   serviceName: string;
+  companyWebsite: string;
   round: string;
   amount: string;
   roundAmount: string;
