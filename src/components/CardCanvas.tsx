@@ -151,7 +151,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     fontWeight: 600,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '10px 32px 22px',
+                    padding: '2px 32px 32px',
                     borderRadius: 10,
                     letterSpacing: '0.5px',
                     lineHeight: 1,
