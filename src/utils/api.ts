@@ -120,6 +120,7 @@ export function buildFundingCards(
       weekLabel: funding.weekLabel,
       companyName: funding.companyName,
       round: funding.round,
+      roundAmount: `${funding.amount || ''} ${funding.round || ''}`.trim(),
     },
     {
       id: generateId(),

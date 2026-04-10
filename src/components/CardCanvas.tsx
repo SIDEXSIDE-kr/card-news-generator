@@ -82,6 +82,21 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           }}
         />
 
+        {/* 투자 표지: 상단 어두운 그라데이션 (로고 영역) */}
+        {card.type === 'funding-cover' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '50%',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+
         {/* 컨텐츠 영역 */}
         <div
           style={{
@@ -103,81 +118,71 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 32,
-                textAlign: design.textAlign,
-                alignItems:
-                  design.textAlign === 'center' ? 'center' : 'flex-start',
+                justifyContent: 'flex-end',
+                height: '100%',
+                textAlign: 'left',
               }}
             >
-              {/* 주차 라벨 */}
-              <span
-                style={{
-                  fontSize: 28,
-                  fontWeight: 600,
-                  color: design.accentColor,
-                  letterSpacing: '1px',
-                  opacity: 0.9,
-                }}
-              >
-                {card.weekLabel || '0월 0주차'}
-              </span>
-
-              {/* 장식 라인 */}
-              <div
-                style={{
-                  width: 60,
-                  height: 4,
-                  backgroundColor: design.accentColor,
-                  borderRadius: 2,
-                  alignSelf:
-                    design.textAlign === 'center' ? 'center' : 'flex-start',
-                }}
-              />
+              {/* 주차 뱃지 */}
+              <div style={{ marginBottom: 24 }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    fontSize: 26,
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    backgroundColor: design.accentColor,
+                    padding: '8px 20px',
+                    borderRadius: 6,
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  {card.weekLabel || '0월 0주차'}
+                </span>
+              </div>
 
               {/* 기업명 */}
               <h1
                 style={{
-                  fontSize: 80,
+                  fontSize: 72,
                   fontWeight: 900,
-                  lineHeight: 1.2,
+                  lineHeight: 1.25,
                   margin: 0,
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
-                  textShadow: '0 2px 8px rgba(0,0,0,0.12)',
                   letterSpacing: '-1px',
                 }}
               >
                 {card.companyName || '기업명'}
               </h1>
 
-              {/* 라운드 */}
-              <span
+              {/* 금액 + 라운드 */}
+              <h2
                 style={{
-                  fontSize: 36,
-                  fontWeight: 700,
-                  color: design.accentColor,
-                  letterSpacing: '0.5px',
-                }}
-              >
-                {card.round || 'Series A'}
-              </span>
-
-              {/* 투자 유치 */}
-              <p
-                style={{
-                  fontSize: 56,
-                  fontWeight: 800,
-                  lineHeight: 1.3,
+                  fontSize: 72,
+                  fontWeight: 900,
+                  lineHeight: 1.25,
                   margin: 0,
-                  opacity: 0.95,
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
-                  textShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                  letterSpacing: '2px',
+                  letterSpacing: '-1px',
+                }}
+              >
+                {card.roundAmount || card.round || '투자'}
+              </h2>
+
+              {/* 투자 유치 */}
+              <h2
+                style={{
+                  fontSize: 72,
+                  fontWeight: 900,
+                  lineHeight: 1.25,
+                  margin: 0,
+                  letterSpacing: '-0.5px',
                 }}
               >
                 투자 유치
-              </p>
+              </h2>
             </div>
           )}
 

@@ -265,11 +265,11 @@ export default function EditorPage({
                       className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
                     />
                     <input
-                      value={card.round || ''}
+                      value={card.roundAmount || ''}
                       onChange={(e) =>
-                        updateCard(index, { round: e.target.value })
+                        updateCard(index, { roundAmount: e.target.value })
                       }
-                      placeholder="투자 라운드 (예: Series A)"
+                      placeholder="금액 + 라운드 (예: 20억 pre-A)"
                       className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
                     />
                   </div>
