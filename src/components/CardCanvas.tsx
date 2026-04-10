@@ -147,11 +147,11 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 <span
                   style={{
                     display: 'inline-block',
-                    fontSize: 34,
+                    fontSize: 30,
                     fontWeight: 600,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '6px 28px 18px',
+                    padding: '10px 32px 22px',
                     borderRadius: 10,
                     letterSpacing: '0.5px',
                     lineHeight: 1,
@@ -593,7 +593,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     flex: 1,
                     textAlign: 'left',
                     position: 'relative',
-                    top: -8,
+                    top: -12,
                   }}
                 >
                   every_startup
@@ -611,7 +611,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     flexShrink: 0,
                     textAlign: 'center',
                     position: 'relative',
-                    top: -8,
+                    top: -4,
                   }}
                 >
                   팔로우
