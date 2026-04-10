@@ -140,7 +140,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 justifyContent: 'flex-end',
                 height: '100%',
                 textAlign: 'left',
-                paddingBottom: 40,
+                paddingBottom: 100,
                 paddingLeft: 72,
               }}
             >
