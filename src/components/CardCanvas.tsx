@@ -591,9 +591,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     color: '#ffffff',
                     flex: 1,
                     textAlign: 'left',
-                    lineHeight: '90px',
-                    height: 90,
-                    overflow: 'hidden',
+                    position: 'relative',
+                    top: -2,
                   }}
                 >
                   every_startup
@@ -602,9 +601,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 {/* 팔로우 버튼 */}
                 <div
                   style={{
-                    height: 56,
-                    lineHeight: '56px',
-                    padding: '0 36px',
+                    padding: '14px 36px',
                     backgroundColor: '#3b82f6',
                     borderRadius: 12,
                     fontSize: 28,
@@ -612,6 +609,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     color: '#ffffff',
                     flexShrink: 0,
                     textAlign: 'center',
+                    position: 'relative',
+                    top: -2,
                   }}
                 >
                   팔로우
@@ -882,8 +881,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               fontWeight: 400,
               opacity: 0.7,
               color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
-              lineHeight: `${BOTTOM_BAR_HEIGHT}px`,
-              height: BOTTOM_BAR_HEIGHT,
+              position: 'relative',
+              top: -2,
             }}
           >
             세상의 모든 스타트업 | 모든 여정을 응원합니다
@@ -894,8 +893,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               fontWeight: 600,
               color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
               opacity: 0.9,
-              lineHeight: `${BOTTOM_BAR_HEIGHT}px`,
-              height: BOTTOM_BAR_HEIGHT,
+              position: 'relative',
+              top: -2,
             }}
           >
             @every_startup
