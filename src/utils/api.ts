@@ -160,7 +160,6 @@ export function buildFundingCards(
       id: generateId(),
       type: 'funding-hiring',
       positions: positions.length > 0 ? positions : [],
-      source: funding.source,
       hiringSource: hiringSource || undefined,
     },
     {
