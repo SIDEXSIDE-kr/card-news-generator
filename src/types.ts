@@ -48,6 +48,7 @@ export const COLOR_PRESETS = [
 ];
 
 export const FONT_OPTIONS = [
+  { value: "'Pretendard', sans-serif", label: 'Pretendard' },
   { value: "'Noto Sans KR', sans-serif", label: 'Noto Sans KR' },
   { value: "'Nanum Gothic', sans-serif", label: '나눔고딕' },
   { value: "'Nanum Myeongjo', serif", label: '나눔명조' },
@@ -57,7 +58,7 @@ export const DEFAULT_DESIGN: DesignConfig = {
   backgroundColor: '#0C0C0C',
   textColor: '#ffffff',
   accentColor: '#FF633E',
-  fontFamily: "'Noto Sans KR', sans-serif",
+  fontFamily: "'Pretendard', sans-serif",
   textAlign: 'left',
 };
 
