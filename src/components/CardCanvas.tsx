@@ -99,17 +99,17 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
             <div
               style={{
                 position: 'absolute',
-                top: 0,
+                top: 60,
                 left: 0,
                 right: 0,
-                height: '45%',
+                height: '35%',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 pointerEvents: 'none',
               }}
             >
-              <span style={{ fontSize: 200, lineHeight: 1 }}>
+              <span style={{ fontSize: 260, lineHeight: 1 }}>
                 {card.emoji || '🚀'}
               </span>
             </div>
@@ -140,20 +140,21 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 justifyContent: 'flex-end',
                 height: '100%',
                 textAlign: 'left',
+                paddingBottom: 40,
               }}
             >
               {/* 주차 뱃지 */}
-              <div style={{ marginBottom: 36 }}>
+              <div style={{ marginBottom: 40 }}>
                 <span
                   style={{
                     display: 'inline-block',
-                    fontSize: 30,
+                    fontSize: 36,
                     fontWeight: 600,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '2px 32px 32px',
-                    borderRadius: 10,
-                    letterSpacing: '0.5px',
+                    padding: '16px 40px 28px',
+                    borderRadius: 50,
+                    letterSpacing: '1px',
                     lineHeight: 1,
                   }}
                 >
