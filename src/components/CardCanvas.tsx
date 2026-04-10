@@ -135,13 +135,10 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           {card.type === 'funding-cover' && (
             <div
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                height: '100%',
-                textAlign: 'left',
-                paddingBottom: 100,
-                paddingLeft: 72,
+                position: 'absolute',
+                bottom: 180,
+                left: 144,
+                right: 72,
               }}
             >
               {/* 주차 뱃지 */}
@@ -173,6 +170,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
                   letterSpacing: '-2px',
+                  color: design.textColor,
                 }}
               >
                 {card.companyName || '기업명'}
@@ -188,6 +186,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
                   letterSpacing: '-2px',
+                  color: design.textColor,
                 }}
               >
                 {card.roundAmount || card.round || '투자'}
@@ -201,6 +200,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   lineHeight: 1.15,
                   margin: 0,
                   letterSpacing: '-1px',
+                  color: design.textColor,
                 }}
               >
                 투자 유치
