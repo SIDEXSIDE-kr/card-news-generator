@@ -100,13 +100,13 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               <div
                 style={{
                   position: 'absolute',
-                  top: 60,
+                  top: 0,
                   left: 0,
                   right: 0,
+                  height: '55%',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: 500,
                   pointerEvents: 'none',
                 }}
               >
@@ -114,8 +114,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   src={card.logoUrl}
                   alt="logo"
                   style={{
-                    maxWidth: 700,
-                    maxHeight: 420,
+                    maxWidth: 800,
+                    maxHeight: 500,
                     objectFit: 'contain',
                   }}
                 />
@@ -542,7 +542,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   fontWeight: 900,
                   lineHeight: 1.3,
                   margin: 0,
-                  color: design.textColor,
+                  color: '#1e293b',
                   letterSpacing: '-0.5px',
                 }}
               >
@@ -561,21 +561,33 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                   minWidth: 500,
                 }}
               >
-                {/* 프로필 아이콘 */}
+                {/* 프로필 이미지 */}
                 <div
                   style={{
-                    width: 80,
-                    height: 80,
+                    width: 90,
+                    height: 90,
                     borderRadius: '50%',
-                    backgroundColor: '#e5e7eb',
+                    backgroundColor: '#f3f4f6',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    fontSize: 40,
+                    overflow: 'hidden',
                   }}
                 >
-                  &#128100;
+                  {card.logoUrl ? (
+                    <img
+                      src={card.logoUrl}
+                      alt="profile"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 50 }}>&#128100;</span>
+                  )}
                 </div>
 
                 {/* 유저네임 */}
@@ -612,16 +624,14 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 style={{
                   fontSize: 36,
                   fontWeight: 600,
-                  lineHeight: 1.7,
+                  lineHeight: 1.8,
                   margin: 0,
-                  color: design.textColor,
-                  opacity: 0.8,
-                  wordBreak: 'keep-all',
+                  color: '#1e293b',
+                  opacity: 0.7,
+                  whiteSpace: 'pre-wrap',
                 }}
               >
-                팔로우하면{'\n'}
-                스타트업 최신 소식과 정보를{'\n'}
-                빠르게 만날 수 있어요!
+                {'팔로우하면\n스타트업 최신 소식과 정보를\n빠르게 만날 수 있어요!'}
               </p>
             </div>
           )}

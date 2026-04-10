@@ -9,6 +9,8 @@ interface EditorPageProps {
   setCards: React.Dispatch<React.SetStateAction<CardData[]>>;
   design: DesignConfig;
   setDesign: React.Dispatch<React.SetStateAction<DesignConfig>>;
+  caption: string;
+  setCaption: React.Dispatch<React.SetStateAction<string>>;
   onBack: () => void;
 }
 
@@ -17,6 +19,8 @@ export default function EditorPage({
   setCards,
   design,
   setDesign,
+  caption,
+  setCaption,
   onBack,
 }: EditorPageProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -464,6 +468,50 @@ export default function EditorPage({
                   </div>
                 )}
 
+                {/* 투자 뉴스: CTA 카드 */}
+                {card.type === 'funding-cta' && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-medium text-slate-500">
+                      프로필 이미지 (이모지/캐릭터)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="w-14 h-14 rounded-full border border-slate-200 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                        {card.logoUrl ? (
+                          <img
+                            src={card.logoUrl}
+                            alt="profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-2xl">&#128100;</span>
+                        )}
+                      </div>
+                      <label className="flex-1 px-3 py-2 text-xs text-center text-indigo-500 border border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                        {card.logoUrl ? '이미지 교체' : '이미지 업로드'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              updateCard(index, {
+                                logoUrl: reader.result as string,
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      고정 디자인 카드입니다. 프로필 이미지만 교체 가능해요.
+                    </p>
+                  </div>
+                )}
+
                 {/* 삭제 버튼 */}
                 {cards.length > 2 && (
                   <button
@@ -489,6 +537,29 @@ export default function EditorPage({
               </button>
             )}
           </div>
+
+          {/* 캡션 패널 */}
+          {caption && (
+            <div className="border-t border-slate-200 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-600">인스타그램 캡션</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(caption);
+                  }}
+                  className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                >
+                  복사
+                </button>
+              </div>
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                rows={6}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none resize-none text-slate-700"
+              />
+            </div>
+          )}
 
           {/* 디자인 패널 */}
           <div className="border-t border-slate-200 p-4 max-h-[380px] overflow-y-auto">

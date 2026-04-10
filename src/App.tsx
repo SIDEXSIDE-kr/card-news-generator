@@ -7,9 +7,11 @@ function App() {
   const [page, setPage] = useState<'input' | 'editor'>('input');
   const [cards, setCards] = useState<CardData[]>([]);
   const [design, setDesign] = useState<DesignConfig>(DEFAULT_DESIGN);
+  const [caption, setCaption] = useState('');
 
-  const handleGenerate = (generatedCards: CardData[]) => {
+  const handleGenerate = (generatedCards: CardData[], generatedCaption?: string) => {
     setCards(generatedCards);
+    setCaption(generatedCaption || '');
     setPage('editor');
   };
 
@@ -23,6 +25,8 @@ function App() {
       setCards={setCards}
       design={design}
       setDesign={setDesign}
+      caption={caption}
+      setCaption={setCaption}
       onBack={() => setPage('input')}
     />
   );

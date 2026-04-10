@@ -260,7 +260,8 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
   "amount": "투자 금액 (예: 30억, 100억 등)",
   "investors": ["투자사1", "투자사2"],
   "reasons": ["투자 이유 1 (한 줄 요약)", "투자 이유 2", "투자 이유 3"],
-  "source": "출처: 매체명"
+  "source": "출처: 매체명",
+  "caption": "인스타그램 캡션 텍스트"
 }
 
 규칙:
@@ -270,7 +271,12 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
 4. 투자사는 기사에 언급된 모든 투자사를 포함하세요 (리드 투자사를 맨 앞에).
 5. 금액이 명시되지 않았으면 "비공개"로 표시하세요.
 6. round가 명확하지 않으면 기사 맥락에서 유추하되, 불확실하면 "투자"로 표시하세요.
-7. companyWebsite는 기사에 언급된 회사 공식 웹사이트 URL을 추출하세요. 없으면 빈 문자열로.`,
+7. companyWebsite는 기사에 언급된 회사 공식 웹사이트 URL을 추출하세요. 없으면 빈 문자열로.
+8. caption은 인스타그램 게시글 캡션입니다. 아래 형식으로 작성하세요:
+   - 첫 줄: "every_startup [투자사]가 [서비스/기업] 관련 스타트업 [기업명]에 [라운드] 투자를 집행했습니다." 형태로 핵심 요약
+   - 이후 2~3개 문단으로 투자 배경, 서비스 특징, 기술력 등을 ~합니다/~했습니다 존댓말로 요약
+   - 마지막 문단 앞에 "💡" 이모지를 붙이고, 게시자의 개인적인 의견/코멘트를 1~2문장으로 작성 (호기심/감탄/응원 톤)
+   - 전체 길이: 150~300자`,
       messages: [
         {
           role: 'user',
@@ -299,6 +305,7 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
       investors: data.investors || [],
       reasons: data.reasons || [],
       source: data.source || '출처: 원문 기사',
+      caption: data.caption || '',
     });
   } catch (error) {
     console.error('Funding summarize error:', error.message);

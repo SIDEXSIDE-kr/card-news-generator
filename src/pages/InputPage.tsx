@@ -13,7 +13,7 @@ import {
 type Mode = 'general' | 'funding';
 
 interface InputPageProps {
-  onGenerate: (cards: CardData[]) => void;
+  onGenerate: (cards: CardData[], caption?: string) => void;
 }
 
 export default function InputPage({ onGenerate }: InputPageProps) {
@@ -61,7 +61,7 @@ export default function InputPage({ onGenerate }: InputPageProps) {
         ]);
 
         const cards = buildFundingCards(funding, hiring.positions, logoUrl);
-        onGenerate(cards);
+        onGenerate(cards, funding.caption);
       } else {
         // 일반 모드
         setStatus('카드뉴스 텍스트를 생성하는 중...');

@@ -29,6 +29,7 @@ export interface FundingData {
   investors: string[];
   reasons: string[];
   source: string;
+  caption: string;
 }
 
 export interface DesignConfig {
