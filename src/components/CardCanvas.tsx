@@ -141,6 +141,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 height: '100%',
                 textAlign: 'left',
                 paddingBottom: 40,
+                paddingLeft: 72,
               }}
             >
               {/* 주차 뱃지 */}
