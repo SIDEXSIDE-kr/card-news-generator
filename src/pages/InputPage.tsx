@@ -5,7 +5,6 @@ import {
   summarizeArticle,
   summarizeFundingArticle,
   scrapeHiring,
-  fetchLogo,
   buildFundingCards,
   getServerConfig,
 } from '../utils/api';
@@ -54,13 +53,10 @@ export default function InputPage({ onGenerate }: InputPageProps) {
           accessCode || undefined
         );
 
-        setStatus('로고 및 채용 정보를 검색하는 중...');
-        const [hiring, logoUrl] = await Promise.all([
-          scrapeHiring(funding.companyName),
-          fetchLogo(funding.companyWebsite),
-        ]);
+        setStatus('채용 정보를 검색하는 중...');
+        const hiring = await scrapeHiring(funding.companyName);
 
-        const cards = buildFundingCards(funding, hiring.positions, logoUrl);
+        const cards = buildFundingCards(funding, hiring.positions);
         onGenerate(cards, funding.caption);
       } else {
         // 일반 모드

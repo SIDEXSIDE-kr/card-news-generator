@@ -82,7 +82,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           }}
         />
 
-        {/* 투자 표지: 상단 어두운 그라데이션 + 로고 */}
+        {/* 투자 표지: 상단 그라데이션 + 이모지 */}
         {card.type === 'funding-cover' && (
           <>
             <div
@@ -96,31 +96,23 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 pointerEvents: 'none',
               }}
             />
-            {card.logoUrl && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '55%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  pointerEvents: 'none',
-                }}
-              >
-                <img
-                  src={card.logoUrl}
-                  alt="logo"
-                  style={{
-                    maxWidth: 800,
-                    maxHeight: 500,
-                    objectFit: 'contain',
-                  }}
-                />
-              </div>
-            )}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '55%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                pointerEvents: 'none',
+              }}
+            >
+              <span style={{ fontSize: 200, lineHeight: 1 }}>
+                {card.emoji || '🚀'}
+              </span>
+            </div>
           </>
         )}
 
@@ -575,19 +567,18 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     overflow: 'hidden',
                   }}
                 >
-                  {card.logoUrl ? (
                     <img
-                      src={card.logoUrl}
-                      alt="profile"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  ) : (
-                    <span style={{ fontSize: 50 }}>&#128100;</span>
-                  )}
+                    src="/profile.png"
+                    alt="profile"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
                 </div>
 
                 {/* 유저네임 */}

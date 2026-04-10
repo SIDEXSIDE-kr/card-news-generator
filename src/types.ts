@@ -16,12 +16,14 @@ export interface CardData {
   reasons?: string[];
   positions?: string[];
   logoUrl?: string;
+  emoji?: string;
 }
 
 export interface FundingData {
   weekLabel: string;
   companyName: string;
   serviceName: string;
+  emoji: string;
   companyWebsite: string;
   round: string;
   amount: string;
@@ -41,16 +43,7 @@ export interface DesignConfig {
 }
 
 export const COLOR_PRESETS = [
-  { bg: '#1a1a2e', text: '#ffffff', accent: '#FFD166', name: '다크 네이비' },
-  { bg: '#ffffff', text: '#1e293b', accent: '#4f46e5', name: '화이트' },
-  { bg: '#0f172a', text: '#e2e8f0', accent: '#38bdf8', name: '미드나이트' },
-  { bg: '#1e1e1e', text: '#f5f5f5', accent: '#ff6b6b', name: '다크 모던' },
-  { bg: '#2d6a4f', text: '#ffffff', accent: '#95d5b2', name: '포레스트' },
-  { bg: '#7c3aed', text: '#ffffff', accent: '#c4b5fd', name: '퍼플' },
-  { bg: '#0c4a6e', text: '#e0f2fe', accent: '#38bdf8', name: '오션블루' },
-  { bg: '#dbeafe', text: '#1e3a5f', accent: '#3b82f6', name: '파스텔 블루' },
-  { bg: '#fef3c7', text: '#92400e', accent: '#f59e0b', name: '웜 옐로' },
-  { bg: '#f3e8ff', text: '#581c87', accent: '#a855f7', name: '라벤더' },
+  { bg: '#0C0C0C', text: '#ffffff', accent: '#FF633E', name: '에브리 스타트업' },
 ];
 
 export const FONT_OPTIONS = [
@@ -60,9 +53,9 @@ export const FONT_OPTIONS = [
 ];
 
 export const DEFAULT_DESIGN: DesignConfig = {
-  backgroundColor: '#1a1a2e',
+  backgroundColor: '#0C0C0C',
   textColor: '#ffffff',
-  accentColor: '#FFD166',
+  accentColor: '#FF633E',
   fontFamily: "'Noto Sans KR', sans-serif",
   textAlign: 'left',
 };

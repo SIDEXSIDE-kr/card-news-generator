@@ -255,6 +255,7 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
 {
   "companyName": "투자받은 기업명",
   "serviceName": "서비스/제품명 (기업명과 다를 수 있음, 같으면 기업명과 동일하게)",
+  "emoji": "서비스를 대표하는 이모지 1개 (예: 한우 유통이면 🐂, 커피면 ☕, 금융이면 💰, AI면 🤖)",
   "companyWebsite": "회사 공식 웹사이트 URL (예: https://example.com)",
   "round": "투자 라운드 (예: Seed, Pre-A, Series A, Series B 등)",
   "amount": "투자 금액 (예: 30억, 100억 등)",
@@ -272,6 +273,7 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
 5. 금액이 명시되지 않았으면 "비공개"로 표시하세요.
 6. round가 명확하지 않으면 기사 맥락에서 유추하되, 불확실하면 "투자"로 표시하세요.
 7. companyWebsite는 기사에 언급된 회사 공식 웹사이트 URL을 추출하세요. 없으면 빈 문자열로.
+9. emoji는 해당 스타트업의 서비스/산업을 가장 잘 나타내는 이모지 1개만 선택하세요. (예: 물류=🚚, 헬스케어=🏥, 부동산=🏠, 교육=📚, 반려동물=🐕, 패션=👗)
 8. caption은 인스타그램 게시글 캡션입니다. 아래 형식으로 작성하세요:
    - 첫 줄: "every_startup [투자사]가 [서비스/기업] 관련 스타트업 [기업명]에 [라운드] 투자를 집행했습니다." 형태로 핵심 요약
    - 이후 2~3개 문단으로 투자 배경, 서비스 특징, 기술력 등을 ~합니다/~했습니다 존댓말로 요약
@@ -298,6 +300,7 @@ app.post('/api/summarize-funding', summarizeLimiter, async (req, res) => {
       weekLabel,
       companyName: data.companyName || '기업명',
       serviceName: data.serviceName || data.companyName || '서비스명',
+      emoji: data.emoji || '🚀',
       companyWebsite: data.companyWebsite || '',
       round: data.round || '투자',
       amount: data.amount || '비공개',

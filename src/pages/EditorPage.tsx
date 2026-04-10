@@ -253,50 +253,14 @@ export default function EditorPage({
                 {/* 투자 뉴스: 표지 */}
                 {card.type === 'funding-cover' && (
                   <div className="space-y-2">
-                    {/* 로고 미리보기 + 교체 */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-16 rounded-lg border border-slate-200 bg-slate-900 flex items-center justify-center overflow-hidden shrink-0">
-                        {card.logoUrl ? (
-                          <img
-                            src={card.logoUrl}
-                            alt="logo"
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs text-slate-400">로고</span>
-                        )}
-                      </div>
-                      <label className="flex-1 px-3 py-2 text-xs text-center text-indigo-500 border border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
-                        {card.logoUrl ? '로고 교체' : '로고 업로드'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              updateCard(index, {
-                                logoUrl: reader.result as string,
-                              });
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                      </label>
-                      {card.logoUrl && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateCard(index, { logoUrl: undefined });
-                          }}
-                          className="px-2 py-2 text-xs text-red-400 hover:text-red-600"
-                        >
-                          삭제
-                        </button>
-                      )}
-                    </div>
+                    <input
+                      value={card.emoji || ''}
+                      onChange={(e) =>
+                        updateCard(index, { emoji: e.target.value })
+                      }
+                      placeholder="이모지 (예: 🐂, ☕, 💰)"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-2xl text-center"
+                    />
                     <input
                       value={card.weekLabel || ''}
                       onChange={(e) =>
@@ -470,44 +434,9 @@ export default function EditorPage({
 
                 {/* 투자 뉴스: CTA 카드 */}
                 {card.type === 'funding-cta' && (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-slate-500">
-                      프로필 이미지 (이모지/캐릭터)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <div className="w-14 h-14 rounded-full border border-slate-200 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                        {card.logoUrl ? (
-                          <img
-                            src={card.logoUrl}
-                            alt="profile"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-2xl">&#128100;</span>
-                        )}
-                      </div>
-                      <label className="flex-1 px-3 py-2 text-xs text-center text-indigo-500 border border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
-                        {card.logoUrl ? '이미지 교체' : '이미지 업로드'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              updateCard(index, {
-                                logoUrl: reader.result as string,
-                              });
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                      </label>
-                    </div>
+                  <div className="p-2 bg-slate-50 rounded-lg">
                     <p className="text-xs text-slate-400">
-                      고정 디자인 카드입니다. 프로필 이미지만 교체 가능해요.
+                      고정 디자인 카드입니다.
                     </p>
                   </div>
                 )}
