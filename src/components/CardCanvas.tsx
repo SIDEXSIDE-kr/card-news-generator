@@ -152,7 +152,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     fontWeight: 600,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '16px 40px 28px',
+                    padding: '8px 40px 36px',
                     borderRadius: 50,
                     letterSpacing: '1px',
                     lineHeight: 1,
@@ -501,7 +501,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               )}
 
               {/* 출처 */}
-              {card.source && (
+              {(card.hiringSource || card.source) && (
                 <span
                   style={{
                     fontSize: 20,
@@ -510,7 +510,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     marginTop: 'auto',
                   }}
                 >
-                  {card.source}
+                  {card.hiringSource ? `출처: ${card.hiringSource}` : card.source}
                 </span>
               )}
             </div>
