@@ -102,7 +102,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 top: 0,
                 left: 0,
                 right: 0,
-                height: '55%',
+                height: '45%',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -143,17 +143,18 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               }}
             >
               {/* 주차 뱃지 */}
-              <div style={{ marginBottom: 28 }}>
+              <div style={{ marginBottom: 36 }}>
                 <span
                   style={{
                     display: 'inline-block',
-                    fontSize: 32,
-                    fontWeight: 700,
+                    fontSize: 40,
+                    fontWeight: 600,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '10px 24px',
-                    borderRadius: 8,
+                    padding: '12px 28px 16px',
+                    borderRadius: 10,
                     letterSpacing: '0.5px',
+                    lineHeight: 1,
                   }}
                 >
                   {card.weekLabel || '0월 0주차'}
@@ -163,13 +164,13 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               {/* 기업명 */}
               <h1
                 style={{
-                  fontSize: 88,
+                  fontSize: 110,
                   fontWeight: 700,
-                  lineHeight: 1.2,
+                  lineHeight: 1.15,
                   margin: 0,
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
-                  letterSpacing: '-1px',
+                  letterSpacing: '-2px',
                 }}
               >
                 {card.companyName || '기업명'}
@@ -178,13 +179,13 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               {/* 금액 + 라운드 */}
               <h2
                 style={{
-                  fontSize: 88,
+                  fontSize: 110,
                   fontWeight: 700,
-                  lineHeight: 1.2,
+                  lineHeight: 1.15,
                   margin: 0,
                   wordBreak: 'keep-all',
                   whiteSpace: 'pre-wrap',
-                  letterSpacing: '-1px',
+                  letterSpacing: '-2px',
                 }}
               >
                 {card.roundAmount || card.round || '투자'}
@@ -193,11 +194,11 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               {/* 투자 유치 */}
               <h2
                 style={{
-                  fontSize: 88,
+                  fontSize: 110,
                   fontWeight: 700,
-                  lineHeight: 1.2,
+                  lineHeight: 1.15,
                   margin: 0,
-                  letterSpacing: '-0.5px',
+                  letterSpacing: '-1px',
                 }}
               >
                 투자 유치
@@ -592,7 +593,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     flex: 1,
                     textAlign: 'left',
                     position: 'relative',
-                    top: -2,
+                    top: -4,
                   }}
                 >
                   every_startup
@@ -601,7 +602,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 {/* 팔로우 버튼 */}
                 <div
                   style={{
-                    padding: '14px 36px',
+                    padding: '10px 36px 14px',
                     backgroundColor: '#3b82f6',
                     borderRadius: 12,
                     fontSize: 28,
@@ -610,7 +611,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     flexShrink: 0,
                     textAlign: 'center',
                     position: 'relative',
-                    top: -2,
+                    top: -4,
                   }}
                 >
                   팔로우
@@ -863,7 +864,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
         <div
           style={{
             position: 'absolute',
-            bottom: 0,
+            bottom: 16,
             left: 0,
             right: 0,
             height: BOTTOM_BAR_HEIGHT,
@@ -878,8 +879,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           <span
             style={{
               fontSize: 20,
-              fontWeight: 400,
-              opacity: 0.7,
+              fontWeight: 300,
+              opacity: 0.6,
               color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
               position: 'relative',
               top: -2,
@@ -890,9 +891,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
           <span
             style={{
               fontSize: 22,
-              fontWeight: 600,
+              fontWeight: 400,
               color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
-              opacity: 0.9,
+              opacity: 0.7,
               position: 'relative',
               top: -2,
             }}
