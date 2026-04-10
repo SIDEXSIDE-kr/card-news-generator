@@ -147,11 +147,11 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 <span
                   style={{
                     display: 'inline-block',
-                    fontSize: 40,
+                    fontSize: 34,
                     fontWeight: 600,
                     color: '#ffffff',
                     backgroundColor: design.accentColor,
-                    padding: '12px 28px 16px',
+                    padding: '6px 28px 18px',
                     borderRadius: 10,
                     letterSpacing: '0.5px',
                     lineHeight: 1,
@@ -593,7 +593,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     flex: 1,
                     textAlign: 'left',
                     position: 'relative',
-                    top: -4,
+                    top: -8,
                   }}
                 >
                   every_startup
@@ -602,7 +602,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                 {/* 팔로우 버튼 */}
                 <div
                   style={{
-                    padding: '10px 36px 14px',
+                    padding: '4px 36px 18px',
                     backgroundColor: '#3b82f6',
                     borderRadius: 12,
                     fontSize: 28,
@@ -611,7 +611,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
                     flexShrink: 0,
                     textAlign: 'center',
                     position: 'relative',
-                    top: -4,
+                    top: -8,
                   }}
                 >
                   팔로우
@@ -883,7 +883,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               opacity: 0.6,
               color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
               position: 'relative',
-              top: -2,
+              top: -6,
             }}
           >
             세상의 모든 스타트업 | 모든 여정을 응원합니다
@@ -895,7 +895,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
               color: card.type === 'funding-cta' ? '#ffffff' : design.textColor,
               opacity: 0.7,
               position: 'relative',
-              top: -2,
+              top: -6,
             }}
           >
             @every_startup
