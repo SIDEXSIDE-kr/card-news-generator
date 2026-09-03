@@ -1,8 +1,12 @@
-import { useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CardData, DesignConfig, generateId } from '../types';
 import CardCanvas from '../components/CardCanvas';
+import CardFields from '../components/CardFields';
 import DesignPanel from '../components/DesignPanel';
-import { downloadSingleCard, downloadAllCardsAsZip } from '../utils/download';
+import PreviewStage from '../components/PreviewStage';
+import ExportSheet from '../components/ExportSheet';
+import { useIsMobile } from '../hooks/useMediaQuery';
+import { captureCardsAsFiles } from '../utils/download';
 
 interface EditorPageProps {
   cards: CardData[];
@@ -14,6 +18,39 @@ interface EditorPageProps {
   onBack: () => void;
 }
 
+type ArrayField = 'investors' | 'reasons' | 'positions';
+
+const MAX_CARDS = 10;
+const MIN_CARDS = 2;
+
+/** navigator.clipboard는 보안 컨텍스트(https/localhost)에서만 존재한다 */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* 아래 폴백으로 */
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function EditorPage({
   cards,
   setCards,
@@ -23,9 +60,26 @@ export default function EditorPage({
   setCaption,
   onBack,
 }: EditorPageProps) {
+  const isMobile = useIsMobile();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [downloading, setDownloading] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'content' | 'design' | 'caption'>(
+    'content'
+  );
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
+  const [exportFiles, setExportFiles] = useState<File[] | null>(null);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // 카드가 줄어들면 선택 인덱스를 범위 안으로 되돌린다
+  useEffect(() => {
+    if (selectedIndex > cards.length - 1) {
+      setSelectedIndex(Math.max(0, cards.length - 1));
+    }
+  }, [cards.length, selectedIndex]);
 
   const setCardRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
@@ -40,65 +94,9 @@ export default function EditorPage({
     );
   };
 
-  const addCard = () => {
-    if (cards.length >= 10) return;
-    const newCard: CardData = {
-      id: generateId(),
-      type: 'body',
-      subtitle: '소제목을 입력하세요',
-      body: '새 카드 내용을 입력하세요.',
-    };
-    // 마지막 카드(ending) 앞에 삽입
-    setCards((prev) => [...prev.slice(0, -1), newCard, prev[prev.length - 1]]);
-    setSelectedIndex(cards.length - 1);
-  };
-
-  const deleteCard = (index: number) => {
-    if (cards.length <= 2) return;
-    setCards((prev) => prev.filter((_, i) => i !== index));
-    if (selectedIndex >= cards.length - 1) {
-      setSelectedIndex(Math.max(0, cards.length - 2));
-    } else if (selectedIndex > index) {
-      setSelectedIndex(selectedIndex - 1);
-    }
-  };
-
-  const handleDownloadSingle = async () => {
-    const el = cardRefs.current[selectedIndex];
-    if (!el) return;
-    setDownloading(true);
-    try {
-      await downloadSingleCard(el, selectedIndex);
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleDownloadAll = async () => {
-    setDownloading(true);
-    try {
-      await downloadAllCardsAsZip(cardRefs.current.slice(0, cards.length));
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const previewScale = 420 / 1080;
-
-  const cardTypeLabel = (type: string, index: number) => {
-    if (type === 'title') return '표지';
-    if (type === 'ending') return '마무리';
-    if (type === 'funding-cover') return '표지';
-    if (type === 'funding-overview') return '서비스 개요';
-    if (type === 'funding-analysis') return '투자 이유';
-    if (type === 'funding-hiring') return '채용 정보';
-    if (type === 'funding-cta') return '팔로우 CTA';
-    return `본문 ${index}`;
-  };
-
   const updateArrayField = (
     index: number,
-    field: 'investors' | 'reasons' | 'positions',
+    field: ArrayField,
     itemIndex: number,
     value: string
   ) => {
@@ -112,21 +110,17 @@ export default function EditorPage({
     );
   };
 
-  const addArrayItem = (
-    index: number,
-    field: 'investors' | 'reasons' | 'positions'
-  ) => {
+  const addArrayItem = (index: number, field: ArrayField) => {
     setCards((prev) =>
-      prev.map((card, i) => {
-        if (i !== index) return card;
-        return { ...card, [field]: [...(card[field] || []), ''] };
-      })
+      prev.map((card, i) =>
+        i === index ? { ...card, [field]: [...(card[field] || []), ''] } : card
+      )
     );
   };
 
   const removeArrayItem = (
     index: number,
-    field: 'investors' | 'reasons' | 'positions',
+    field: ArrayField,
     itemIndex: number
   ) => {
     setCards((prev) =>
@@ -139,9 +133,311 @@ export default function EditorPage({
     );
   };
 
+  /** 인덱스를 미리 묶어 CardFields에 넘길 콜백 묶음 */
+  const fieldHandlers = (index: number) => ({
+    onChange: (updates: Partial<CardData>) => updateCard(index, updates),
+    onArrayChange: (field: ArrayField, itemIndex: number, value: string) =>
+      updateArrayField(index, field, itemIndex, value),
+    onArrayAdd: (field: ArrayField) => addArrayItem(index, field),
+    onArrayRemove: (field: ArrayField, itemIndex: number) =>
+      removeArrayItem(index, field, itemIndex),
+  });
+
+  const addCard = () => {
+    if (cards.length >= MAX_CARDS) return;
+    const newCard: CardData = {
+      id: generateId(),
+      type: 'body',
+      subtitle: '소제목을 입력하세요',
+      body: '새 카드 내용을 입력하세요.',
+    };
+    // 마지막 카드 바로 앞에 삽입
+    setCards((prev) => [...prev.slice(0, -1), newCard, prev[prev.length - 1]]);
+    setSelectedIndex(cards.length - 1);
+  };
+
+  const deleteCard = (index: number) => {
+    if (cards.length <= MIN_CARDS) return;
+    setCards((prev) => prev.filter((_, i) => i !== index));
+    setSelectedIndex((prev) => {
+      const next = prev > index ? prev - 1 : prev;
+      return Math.max(0, Math.min(next, cards.length - 2));
+    });
+  };
+
+  /** 카드를 PNG로 렌더링한 뒤 저장·공유 시트를 연다 */
+  const runExport = async (scope: 'current' | 'all') => {
+    const targets =
+      scope === 'current'
+        ? [cardRefs.current[selectedIndex]]
+        : cardRefs.current.slice(0, cards.length);
+
+    if (!targets.some(Boolean)) return;
+
+    setError('');
+    setProgress({ done: 0, total: targets.filter(Boolean).length });
+    try {
+      const files = await captureCardsAsFiles(targets, (done, total) =>
+        setProgress({ done, total })
+      );
+      setExportFiles(files);
+    } catch {
+      setError('이미지를 만드는 데 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  const handleCopyCaption = async () => {
+    const ok = await copyText(caption);
+    setCopied(ok);
+    setError(ok ? '' : '복사에 실패했습니다. 길게 눌러 직접 복사해주세요.');
+    if (ok) setTimeout(() => setCopied(false), 2000);
+  };
+
+  const cardTypeLabel = (type: string, index: number) => {
+    if (type === 'title') return '표지';
+    if (type === 'ending') return '마무리';
+    if (type === 'funding-cover') return '표지';
+    if (type === 'funding-overview') return '서비스 개요';
+    if (type === 'funding-analysis') return '투자 이유';
+    if (type === 'funding-hiring') return '채용 정보';
+    if (type === 'funding-cta') return '팔로우 CTA';
+    return `본문 ${index}`;
+  };
+
+  const current = cards[selectedIndex];
+  const busy = progress !== null;
+
+  /* ── 카드 넘기기 네비게이션 ───────────────────────── */
+  const nav = (
+    <div className="flex items-center justify-center gap-3">
+      <button
+        onClick={() => setSelectedIndex(Math.max(0, selectedIndex - 1))}
+        disabled={selectedIndex === 0}
+        className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-600 disabled:opacity-30 transition-all shrink-0"
+        aria-label="이전 카드"
+      >
+        &#8249;
+      </button>
+
+      <div className="flex items-center gap-2 flex-wrap justify-center">
+        {cards.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setSelectedIndex(i)}
+            className={`w-2.5 h-2.5 rounded-full transition-all ${
+              i === selectedIndex ? 'bg-indigo-500 scale-125' : 'bg-slate-300'
+            }`}
+            aria-label={`카드 ${i + 1}`}
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={() =>
+          setSelectedIndex(Math.min(cards.length - 1, selectedIndex + 1))
+        }
+        disabled={selectedIndex === cards.length - 1}
+        className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-600 disabled:opacity-30 transition-all shrink-0"
+        aria-label="다음 카드"
+      >
+        &#8250;
+      </button>
+    </div>
+  );
+
+  /* ── 다운로드용 숨김 렌더링 영역 ──────────────────── */
+  const hiddenRender = (
+    <div
+      aria-hidden
+      style={{
+        position: 'fixed',
+        left: -99999,
+        top: 0,
+        opacity: 0,
+        pointerEvents: 'none',
+      }}
+    >
+      {cards.map((card, i) => (
+        <CardCanvas
+          key={card.id}
+          ref={setCardRef(i)}
+          card={card}
+          design={design}
+        />
+      ))}
+    </div>
+  );
+
+  const overlays = (
+    <>
+      {busy && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl px-8 py-6 text-center shadow-2xl">
+            <div className="w-8 h-8 mx-auto mb-3 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <p className="text-sm font-semibold text-slate-700">
+              이미지 만드는 중...
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              {progress.done} / {progress.total}장
+            </p>
+          </div>
+        </div>
+      )}
+
+      {exportFiles && (
+        <ExportSheet files={exportFiles} onClose={() => setExportFiles(null)} />
+      )}
+    </>
+  );
+
+  if (!current) return null;
+
+  const captionPanel = (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold text-slate-600">
+          인스타그램 캡션
+        </span>
+        <button
+          onClick={handleCopyCaption}
+          className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors px-2 py-1"
+        >
+          {copied ? '복사됨' : '복사'}
+        </button>
+      </div>
+      <textarea
+        value={caption}
+        onChange={(e) => setCaption(e.target.value)}
+        rows={isMobile ? 12 : 6}
+        className="w-full px-3 py-2 text-base lg:text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none resize-none text-slate-700"
+      />
+    </div>
+  );
+
+  /* ══════════════════ 모바일 레이아웃 ══════════════════ */
+  if (isMobile) {
+    const tabs = [
+      ['content', cardTypeLabel(current.type, selectedIndex)],
+      ['design', '디자인'],
+      ...(caption ? [['caption', '캡션'] as const] : []),
+    ] as const;
+
+    return (
+      <div className="bg-slate-100 flex flex-col" style={{ height: '100dvh' }}>
+        <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0">
+          <button
+            onClick={onBack}
+            className="text-slate-500 text-sm font-medium flex items-center gap-1"
+          >
+            <span>&#8592;</span> 돌아가기
+          </button>
+          <h1 className="text-base font-bold text-slate-800">에디터</h1>
+          <span className="text-sm text-slate-400">
+            {selectedIndex + 1}/{cards.length}
+          </span>
+        </header>
+
+        {/* 미리보기 */}
+        <div className="shrink-0 px-4 pt-4 pb-3">
+          <PreviewStage
+            card={current}
+            design={design}
+            maxWidth="min(100%, calc(32dvh * 0.8))"
+          />
+          <div className="mt-3">{nav}</div>
+        </div>
+
+        {/* 탭 */}
+        <div className="shrink-0 flex border-b border-slate-200 bg-white">
+          {tabs.map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setMobileTab(key as typeof mobileTab)}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors border-b-2 truncate px-1 ${
+                mobileTab === key
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-slate-400'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* 편집 영역 */}
+        <div className="flex-1 overflow-y-auto bg-white px-4 py-4">
+          {mobileTab === 'content' && (
+            <div className="space-y-4">
+              <CardFields card={current} {...fieldHandlers(selectedIndex)} />
+
+              <div className="flex gap-2 pt-1">
+                {cards.length < MAX_CARDS && (
+                  <button
+                    onClick={addCard}
+                    className="flex-1 py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-sm text-slate-500"
+                  >
+                    + 카드 추가
+                  </button>
+                )}
+                {cards.length > MIN_CARDS && (
+                  <button
+                    onClick={() => deleteCard(selectedIndex)}
+                    className="px-4 py-2.5 border border-red-200 text-red-500 rounded-xl text-sm"
+                  >
+                    이 카드 삭제
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mobileTab === 'design' && (
+            <DesignPanel design={design} onChange={setDesign} />
+          )}
+
+          {mobileTab === 'caption' && captionPanel}
+        </div>
+
+        {error && (
+          <p className="shrink-0 px-4 py-2 bg-red-50 text-red-600 text-xs">
+            {error}
+          </p>
+        )}
+
+        {/* 하단 고정 액션 바 */}
+        <div
+          className="shrink-0 bg-white border-t border-slate-200 px-4 pt-3 flex gap-2"
+          style={{
+            paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))',
+          }}
+        >
+          <button
+            onClick={() => runExport('current')}
+            disabled={busy}
+            className="flex-1 py-3.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm disabled:opacity-50"
+          >
+            현재 카드
+          </button>
+          <button
+            onClick={() => runExport('all')}
+            disabled={busy}
+            className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl text-sm disabled:opacity-50"
+          >
+            전체 {cards.length}장 저장 / 공유
+          </button>
+        </div>
+
+        {hiddenRender}
+        {overlays}
+      </div>
+    );
+  }
+
+  /* ══════════════════ 데스크톱 레이아웃 ══════════════════ */
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* 상단 바 */}
+    <div className="h-screen bg-slate-100 flex flex-col overflow-hidden">
       <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
         <button
           onClick={onBack}
@@ -153,11 +449,10 @@ export default function EditorPage({
         <div className="text-sm text-slate-400">{cards.length}장</div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* 좌측: 카드 리스트 + 디자인 패널 */}
-        <div className="w-[420px] bg-white border-r border-slate-200 flex flex-col shrink-0">
-          {/* 카드 리스트 */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* 좌측: 카드 리스트 + 캡션 + 디자인 패널 */}
+        <div className="w-[420px] bg-white border-r border-slate-200 flex flex-col shrink-0 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
             {cards.map((card, index) => (
               <div
                 key={card.id}
@@ -177,287 +472,9 @@ export default function EditorPage({
                   </span>
                 </div>
 
-                {card.type === 'title' && (
-                  <div className="space-y-2">
-                    <input
-                      value={card.title || ''}
-                      onChange={(e) =>
-                        updateCard(index, { title: e.target.value })
-                      }
-                      placeholder="제목"
-                      className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                    <input
-                      value={card.subtitle || ''}
-                      onChange={(e) =>
-                        updateCard(index, { subtitle: e.target.value })
-                      }
-                      placeholder="부제"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                    <input
-                      value={card.tags || ''}
-                      onChange={(e) =>
-                        updateCard(index, { tags: e.target.value })
-                      }
-                      placeholder="태그 (예: #스타트업 #로봇 #테크)"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-indigo-500"
-                    />
-                  </div>
-                )}
+                <CardFields card={card} {...fieldHandlers(index)} />
 
-                {card.type === 'body' && (
-                  <div className="space-y-2">
-                    <input
-                      value={card.subtitle || ''}
-                      onChange={(e) =>
-                        updateCard(index, { subtitle: e.target.value })
-                      }
-                      placeholder="소제목"
-                      className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                    <textarea
-                      value={card.body || ''}
-                      onChange={(e) =>
-                        updateCard(index, { body: e.target.value })
-                      }
-                      placeholder="본문 내용"
-                      rows={3}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none resize-none"
-                    />
-                  </div>
-                )}
-
-                {card.type === 'ending' && (
-                  <div className="space-y-2">
-                    <textarea
-                      value={card.body || ''}
-                      onChange={(e) =>
-                        updateCard(index, { body: e.target.value })
-                      }
-                      placeholder="마무리 멘트"
-                      rows={2}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none resize-none"
-                    />
-                    <input
-                      value={card.source || ''}
-                      onChange={(e) =>
-                        updateCard(index, { source: e.target.value })
-                      }
-                      placeholder="출처"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                  </div>
-                )}
-
-                {/* 투자 뉴스: 표지 */}
-                {card.type === 'funding-cover' && (
-                  <div className="space-y-2">
-                    <input
-                      value={card.emoji || ''}
-                      onChange={(e) =>
-                        updateCard(index, { emoji: e.target.value })
-                      }
-                      placeholder="이모지 (예: 🐂, ☕, 💰)"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-2xl text-center"
-                    />
-                    <input
-                      value={card.weekLabel || ''}
-                      onChange={(e) =>
-                        updateCard(index, { weekLabel: e.target.value })
-                      }
-                      placeholder="0월 0주차"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-indigo-500"
-                    />
-                    <input
-                      value={card.companyName || ''}
-                      onChange={(e) =>
-                        updateCard(index, { companyName: e.target.value })
-                      }
-                      placeholder="기업명"
-                      className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                    <input
-                      value={card.roundAmount || ''}
-                      onChange={(e) =>
-                        updateCard(index, { roundAmount: e.target.value })
-                      }
-                      placeholder="금액 + 라운드 (예: 20억 pre-A)"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                  </div>
-                )}
-
-                {/* 투자 뉴스: 서비스 개요 */}
-                {card.type === 'funding-overview' && (
-                  <div className="space-y-2">
-                    <input
-                      value={card.serviceName || ''}
-                      onChange={(e) =>
-                        updateCard(index, { serviceName: e.target.value })
-                      }
-                      placeholder="서비스명"
-                      className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                    />
-                    <input
-                      value={card.roundAmount || ''}
-                      onChange={(e) =>
-                        updateCard(index, { roundAmount: e.target.value })
-                      }
-                      placeholder="라운드 규모 (예: Pre-A 30억)"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none text-indigo-500"
-                    />
-                    <label className="block text-xs font-medium text-slate-500 mt-1">
-                      투자사
-                    </label>
-                    {(card.investors || []).map((inv, i) => (
-                      <div key={i} className="flex gap-1">
-                        <input
-                          value={inv}
-                          onChange={(e) =>
-                            updateArrayField(index, 'investors', i, e.target.value)
-                          }
-                          placeholder={`투자사 ${i + 1}`}
-                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                        />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeArrayItem(index, 'investors', i);
-                          }}
-                          className="px-2 text-red-400 hover:text-red-600 text-xs"
-                        >
-                          &#10005;
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addArrayItem(index, 'investors');
-                      }}
-                      className="text-xs text-indigo-500 hover:text-indigo-700"
-                    >
-                      + 투자사 추가
-                    </button>
-                  </div>
-                )}
-
-                {/* 투자 뉴스: 투자 이유 */}
-                {card.type === 'funding-analysis' && (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-medium text-slate-500">
-                      왜 투자받았을까?
-                    </label>
-                    {(card.reasons || []).map((reason, i) => (
-                      <div key={i} className="flex gap-1">
-                        <span className="px-2 py-2 text-sm text-indigo-500 font-bold">
-                          {i + 1}.
-                        </span>
-                        <input
-                          value={reason}
-                          onChange={(e) =>
-                            updateArrayField(index, 'reasons', i, e.target.value)
-                          }
-                          placeholder={`이유 ${i + 1}`}
-                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                        />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeArrayItem(index, 'reasons', i);
-                          }}
-                          className="px-2 text-red-400 hover:text-red-600 text-xs"
-                        >
-                          &#10005;
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addArrayItem(index, 'reasons');
-                      }}
-                      className="text-xs text-indigo-500 hover:text-indigo-700"
-                    >
-                      + 이유 추가
-                    </button>
-                  </div>
-                )}
-
-                {/* 투자 뉴스: 채용 정보 */}
-                {card.type === 'funding-hiring' && (
-                  <div className="space-y-2">
-                    {card.hiringSource ? (
-                      <div className="flex items-start gap-1 p-2 bg-emerald-50 rounded-lg">
-                        <span className="text-emerald-600 text-xs mt-0.5">&#10003;</span>
-                        <p className="text-xs text-emerald-700">
-                          출처: <span className="font-semibold">{card.hiringSource}</span>에서 가져온 정보입니다. 정확한지 확인해주세요.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-1 p-2 bg-amber-50 rounded-lg">
-                        <span className="text-amber-600 text-xs mt-0.5">!</span>
-                        <p className="text-xs text-amber-700">
-                          채용 정보를 자동으로 찾지 못했습니다. 직접 추가하거나 비워두세요.
-                        </p>
-                      </div>
-                    )}
-                    <label className="block text-xs font-medium text-slate-500">
-                      채용 중인 직군
-                    </label>
-                    {(card.positions || []).map((pos, i) => (
-                      <div key={i} className="flex gap-1">
-                        <input
-                          value={pos}
-                          onChange={(e) =>
-                            updateArrayField(index, 'positions', i, e.target.value)
-                          }
-                          placeholder={`직군 ${i + 1}`}
-                          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none"
-                        />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeArrayItem(index, 'positions', i);
-                          }}
-                          className="px-2 text-red-400 hover:text-red-600 text-xs"
-                        >
-                          &#10005;
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addArrayItem(index, 'positions');
-                      }}
-                      className="text-xs text-indigo-500 hover:text-indigo-700"
-                    >
-                      + 직군 추가
-                    </button>
-                    <input
-                      value={card.source || ''}
-                      onChange={(e) =>
-                        updateCard(index, { source: e.target.value })
-                      }
-                      placeholder="출처"
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none mt-2"
-                    />
-                  </div>
-                )}
-
-                {/* 투자 뉴스: CTA 카드 */}
-                {card.type === 'funding-cta' && (
-                  <div className="p-2 bg-slate-50 rounded-lg">
-                    <p className="text-xs text-slate-400">
-                      고정 디자인 카드입니다.
-                    </p>
-                  </div>
-                )}
-
-                {/* 삭제 버튼 */}
-                {cards.length > 2 && (
+                {cards.length > MIN_CARDS && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -471,8 +488,7 @@ export default function EditorPage({
               </div>
             ))}
 
-            {/* 카드 추가 버튼 */}
-            {cards.length < 10 && (
+            {cards.length < MAX_CARDS && (
               <button
                 onClick={addCard}
                 className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-sm text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors"
@@ -482,135 +498,52 @@ export default function EditorPage({
             )}
           </div>
 
-          {/* 캡션 패널 */}
           {caption && (
-            <div className="border-t border-slate-200 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-600">인스타그램 캡션</span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(caption);
-                  }}
-                  className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
-                >
-                  복사
-                </button>
-              </div>
-              <textarea
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                rows={6}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 outline-none resize-none text-slate-700"
-              />
-            </div>
+            <div className="border-t border-slate-200 p-4">{captionPanel}</div>
           )}
 
-          {/* 디자인 패널 */}
           <div className="border-t border-slate-200 p-4 max-h-[380px] overflow-y-auto">
             <DesignPanel design={design} onChange={setDesign} />
           </div>
         </div>
 
         {/* 우측: 미리보기 */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-800/5">
-          {/* 카드 미리보기 영역 */}
-          <div
-            className="rounded-xl overflow-hidden shadow-2xl shadow-slate-400/20"
-            style={{
-              width: 1080 * previewScale,
-              height: 1350 * previewScale,
-            }}
-          >
-            <div
-              style={{
-                transform: `scale(${previewScale})`,
-                transformOrigin: 'top left',
-              }}
-            >
-              <CardCanvas card={cards[selectedIndex]} design={design} />
-            </div>
-          </div>
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-8 bg-slate-800/5 overflow-y-auto">
+          <PreviewStage
+            card={current}
+            design={design}
+            maxWidth="min(420px, calc(58vh * 0.8))"
+          />
 
-          {/* 네비게이션 */}
-          <div className="flex items-center gap-4 mt-6">
-            <button
-              onClick={() => setSelectedIndex(Math.max(0, selectedIndex - 1))}
-              disabled={selectedIndex === 0}
-              className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              &#8249;
-            </button>
-
-            <div className="flex items-center gap-2">
-              {cards.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedIndex(i)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
-                    i === selectedIndex
-                      ? 'bg-indigo-500 scale-125'
-                      : 'bg-slate-300 hover:bg-slate-400'
-                  }`}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={() =>
-                setSelectedIndex(
-                  Math.min(cards.length - 1, selectedIndex + 1)
-                )
-              }
-              disabled={selectedIndex === cards.length - 1}
-              className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              &#8250;
-            </button>
-          </div>
+          <div className="mt-6">{nav}</div>
 
           <div className="text-sm text-slate-500 mt-2">
             {selectedIndex + 1} / {cards.length}
           </div>
 
-          {/* 다운로드 버튼 */}
+          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
           <div className="flex gap-3 mt-6">
             <button
-              onClick={handleDownloadSingle}
-              disabled={downloading}
+              onClick={() => runExport('current')}
+              disabled={busy}
               className="px-6 py-3 bg-white text-slate-700 font-semibold rounded-xl shadow-md hover:bg-slate-50 disabled:opacity-50 transition-all text-sm"
             >
-              {downloading ? '처리 중...' : '현재 카드 다운로드'}
+              현재 카드 저장
             </button>
             <button
-              onClick={handleDownloadAll}
-              disabled={downloading}
+              onClick={() => runExport('all')}
+              disabled={busy}
               className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-700 disabled:opacity-50 transition-all text-sm"
             >
-              {downloading ? '처리 중...' : '전체 ZIP 다운로드'}
+              전체 {cards.length}장 저장
             </button>
           </div>
         </div>
       </div>
 
-      {/* 숨겨진 렌더링 영역 (다운로드용) */}
-      <div
-        style={{
-          position: 'fixed',
-          left: -9999,
-          top: 0,
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-      >
-        {cards.map((card, i) => (
-          <CardCanvas
-            key={card.id}
-            ref={setCardRef(i)}
-            card={card}
-            design={design}
-          />
-        ))}
-      </div>
+      {hiddenRender}
+      {overlays}
     </div>
   );
 }

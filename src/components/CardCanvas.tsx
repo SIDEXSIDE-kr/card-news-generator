@@ -866,11 +866,13 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(
         <div
           style={{
             position: 'absolute',
-            bottom: 16,
+            // 바닥까지 꽉 채운다. 늘어난 16px만큼 아래 패딩을 주어
+            // 바의 윗변과 글자 위치는 그대로 유지된다.
+            bottom: 0,
             left: 0,
             right: 0,
-            height: BOTTOM_BAR_HEIGHT,
-            padding: '0 60px',
+            height: BOTTOM_BAR_HEIGHT + 16,
+            padding: '0 60px 16px',
             backgroundColor: card.type === 'funding-cta' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)',
             display: 'flex',
             alignItems: 'center',

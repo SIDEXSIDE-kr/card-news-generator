@@ -43,3 +43,33 @@ input[type='color']::-webkit-color-swatch {
   border: none;
   border-radius: 4px;
 }
+
+/* ── 모바일 대응 ───────────────────────────────── */
+
+/* iOS는 16px 미만 입력창에 포커스하면 화면을 확대해 레이아웃을 밀어버린다.
+   Tailwind의 text-sm(클래스)보다 우선해야 하므로 !important 사용 */
+@media (max-width: 1023px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* 좁은 화면에서 스크롤바가 내용 폭을 잡아먹지 않게 */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* 가로 스크롤 및 바운스 방지 */
+html,
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+/* 탭 시 파란 하이라이트 제거 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}

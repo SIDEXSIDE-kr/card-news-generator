@@ -1,0 +1,17 @@
+# Render 배포 설정
+# ANTHROPIC_API_KEY와 ACCESS_CODE는 코드에 넣지 않고
+# Render 대시보드의 Environment 탭에서 직접 입력한다 (sync: false)
+services:
+  - type: web
+    name: card-news-generator
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ACCESS_CODE
+        sync: false

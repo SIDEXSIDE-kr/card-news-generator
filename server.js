@@ -12,6 +12,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+
+// Render/Heroku 등은 리버스 프록시 뒤에서 돌아간다.
+// 이걸 켜야 req.ip가 프록시 IP가 아닌 실제 사용자 IP가 되고,
+// 아래 rate limit이 사용자별로 정상 동작한다.
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json());
 
