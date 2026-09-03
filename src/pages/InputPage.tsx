@@ -18,7 +18,24 @@ interface InputPageProps {
 export default function InputPage({ onGenerate }: InputPageProps) {
   const [url, setUrl] = useState('');
   const [mode, setMode] = useState<Mode>('funding');
-  const [accessCode, setAccessCode] = useState('');
+  // 폰에서 매번 코드를 다시 치지 않도록 기기에 기억시킨다.
+  // (시크릿 모드 등 저장이 막힌 환경에서도 죽지 않게 try/catch)
+  const [accessCode, setAccessCode] = useState(() => {
+    try {
+      return localStorage.getItem('cardnews.accessCode') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const rememberAccessCode = (value: string) => {
+    setAccessCode(value);
+    try {
+      localStorage.setItem('cardnews.accessCode', value);
+    } catch {
+      /* 저장 못해도 이번 세션에서는 동작한다 */
+    }
+  };
   const [showSettings, setShowSettings] = useState(false);
   const [cardCount, setCardCount] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -198,7 +215,7 @@ export default function InputPage({ onGenerate }: InputPageProps) {
                       <input
                         type="password"
                         value={accessCode}
-                        onChange={(e) => setAccessCode(e.target.value)}
+                        onChange={(e) => rememberAccessCode(e.target.value)}
                         placeholder="액세스 코드 입력"
                         className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
                         disabled={loading}
